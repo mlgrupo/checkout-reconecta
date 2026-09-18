@@ -6,6 +6,7 @@ import { FormularioEntrar } from "@/components/auth/formulario-entrar";
 import { Button } from "@/components/ui/button";
 import { IconeAlerta, IconeEscudo } from "@/components/ui/icons";
 import { obterUsuario } from "@/lib/auth/session";
+import { acessoLocalDisponivel } from "@/lib/auth/sessao-local";
 import { prontidao } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Entrar" };
@@ -24,6 +25,7 @@ export default async function PaginaEntrar({
   const usuario = await obterUsuario();
   if (usuario) redirect("/painel");
 
+  const acessoLocal = await acessoLocalDisponivel();
   const { erro, returnTo } = await searchParams;
   const destino = returnTo && returnTo.startsWith("/") ? returnTo : "/painel";
   const mensagemErro = erro ? (mensagensDeErro[erro] ?? "Não foi possível entrar. Tente de novo.") : null;
@@ -54,8 +56,8 @@ export default async function PaginaEntrar({
         <div className="colchetes w-full max-w-[420px] animate-rise rounded-card border border-gelo bg-branco p-7 shadow-card sm:p-9">
           <h1 className="text-[28px] font-semibold leading-tight">Entrar</h1>
           <p className="mt-2 text-[15px] text-marinho-2">
-            {prontidao.adminLocal
-              ? "Acesse o painel de operações com suas credenciais de administrador."
+            {acessoLocal
+              ? "Acesse o painel de operações com seu e-mail e senha."
               : "Use sua conta corporativa para acessar o painel de operações."}
           </p>
 
@@ -69,7 +71,7 @@ export default async function PaginaEntrar({
             </div>
           )}
 
-          {!prontidao.auth0 && !prontidao.adminLocal && (
+          {!prontidao.auth0 && !acessoLocal && (
             <div
               role="status"
               className="mt-6 rounded-panel border border-ambar/30 bg-ambar-claro px-3.5 py-3 text-[13px] text-ambar"
@@ -79,14 +81,14 @@ export default async function PaginaEntrar({
             </div>
           )}
 
-          {prontidao.adminLocal && <FormularioEntrar destino={destino} />}
+          {acessoLocal && <FormularioEntrar destino={destino} />}
 
           {prontidao.auth0 && (
-            <div className={prontidao.adminLocal ? "mt-6 border-t border-gelo pt-6" : "mt-8"}>
+            <div className={acessoLocal ? "mt-6 border-t border-gelo pt-6" : "mt-8"}>
               <Button
                 href={`/auth/login?returnTo=${encodeURIComponent(destino)}`}
                 tamanho="lg"
-                variante={prontidao.adminLocal ? "secundario" : "primario"}
+                variante={acessoLocal ? "secundario" : "primario"}
                 className="w-full"
               >
                 Entrar com minha conta corporativa
@@ -94,7 +96,7 @@ export default async function PaginaEntrar({
             </div>
           )}
 
-          {!prontidao.adminLocal && (
+          {!acessoLocal && (
             <p className="mt-3 text-center text-[13px] text-marinho-3">
               Sem acesso? Peça a um administrador da Reconecta para criar seu usuário.
             </p>
@@ -102,10 +104,9 @@ export default async function PaginaEntrar({
 
           <div className="mt-8 flex items-start gap-2 border-t border-gelo pt-5 text-[12px] text-marinho-3">
             <IconeEscudo tamanho={15} className="mt-0.5 shrink-0 text-azul" />
-            {prontidao.adminLocal ? (
+            {acessoLocal ? (
               <span>
-                Acesso de administrador em uso enquanto o login corporativo não está ativo. A sessão dura 8 horas e
-                fica em um cookie assinado.
+                A sessão dura 8 horas e fica em um cookie assinado. Sua senha é guardada protegida, nunca em texto.
               </span>
             ) : (
               <span>Autenticação protegida pelo Auth0. Sua senha nunca passa por este servidor.</span>

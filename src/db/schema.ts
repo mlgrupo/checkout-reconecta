@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { AparenciaParcial } from "@/lib/aparencia";
+import type { Papel } from "@/lib/auth/roles";
 import type { Metodo, StatusPedido, TipoItem } from "@/lib/dominio";
 
 export { METODOS, STATUS_PEDIDO, TIPOS_ITEM } from "@/lib/dominio";
@@ -168,6 +169,28 @@ export const eventosWebhook = pgTable("eventos_webhook", {
   processadoEm: timestamp("processado_em", { withTimezone: true }),
   erro: text("erro"),
 });
+
+/**
+ * Pessoas com acesso ao painel, quando a plataforma roda sem Auth0.
+ * A senha nunca é guardada: só o resultado do scrypt com sal próprio.
+ */
+export const usuariosLocais = pgTable(
+  "usuarios_locais",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    nome: text("nome").notNull(),
+    email: text("email").notNull().unique(),
+    senhaHash: text("senha_hash").notNull(),
+    papel: text("papel").$type<Papel>().default("operador").notNull(),
+    ativo: boolean("ativo").default(true).notNull(),
+    ultimoAcessoEm: timestamp("ultimo_acesso_em", { withTimezone: true }),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [index("usuarios_locais_ativo_idx").on(t.ativo)],
+);
+
+export type UsuarioLocal = typeof usuariosLocais.$inferSelect;
 
 /** Configurações editáveis pelo painel (ex.: id do GTM). */
 export const configuracoes = pgTable("configuracoes", {

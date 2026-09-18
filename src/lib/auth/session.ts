@@ -44,7 +44,7 @@ function normalizar(user: Record<string, unknown>): UsuarioSessao {
 export async function obterUsuario(): Promise<UsuarioSessao | null> {
   const local = await usuarioLocal();
   if (local) {
-    return { sub: local.sub, name: local.name, email: local.email, email_verified: true, roles: ["admin"] };
+    return { sub: local.sub, name: local.nome, email: local.email, email_verified: true, roles: [local.papel] };
   }
   try {
     const session = await auth0.getSession();

@@ -2,6 +2,14 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.8.0] — 2026-09-18
+
+### Adicionado
+
+- Tela de **Acessos**: criar uma entrada por pessoa, com nome, e-mail, senha e papel, sem depender do Auth0. As senhas passam por scrypt com sal próprio e nunca são guardadas em texto.
+- Desativar um acesso corta a entrada na hora, inclusive sessões já abertas, porque papel e situação são lidos do banco a cada requisição.
+- Proteções: ninguém desativa, rebaixa ou exclui o próprio acesso; senha mínima de 10 caracteres; e-mail repetido é recusado.
+
 ## [0.7.0] — 2026-09-18
 
 ### Adicionado

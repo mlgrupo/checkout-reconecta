@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ipDaRequisicao, lerCorpo } from "@/lib/api";
-import { COOKIE_ADMIN, credenciaisValidas, criarToken, DURACAO_SEGUNDOS, opcoesCookie } from "@/lib/auth/sessao-local";
-import { prontidao } from "@/lib/env";
+import {
+  COOKIE_ADMIN,
+  credenciaisDoAmbiente,
+  criarToken,
+  DURACAO_SEGUNDOS,
+  opcoesCookie,
+  registrarAcesso,
+} from "@/lib/auth/sessao-local";
+import { autenticar } from "@/lib/usuarios-locais";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +40,8 @@ function registrarFalha(ip: string) {
   else reg.contador += 1;
 }
 
-/** POST /api/auth/entrar — login do administrador local. */
+/** POST /api/auth/entrar — login sem Auth0: administrador do ambiente ou acesso do painel. */
 export async function POST(req: Request) {
-  if (!prontidao.adminLocal) {
-    return NextResponse.json({ erro: "O acesso local não está habilitado neste ambiente." }, { status: 404 });
-  }
   const ip = ipDaRequisicao(req) ?? "desconhecido";
   if (bloqueado(ip)) {
     return NextResponse.json({ erro: "Muitas tentativas. Espere alguns minutos e tente de novo." }, { status: 429 });
@@ -45,15 +49,26 @@ export async function POST(req: Request) {
 
   const corpo = await lerCorpo(req, schema);
   if (corpo.erro) return corpo.erro;
+  const { email, senha } = corpo.dados;
 
-  if (!credenciaisValidas(corpo.dados.email, corpo.dados.senha)) {
-    registrarFalha(ip);
-    console.warn(`[auth] tentativa de login local malsucedida (ip ${ip}).`);
-    return NextResponse.json({ erro: "E-mail ou senha incorretos." }, { status: 401 });
+  // O administrador do ambiente vem primeiro: é a porta de entrada que não depende do banco.
+  if (credenciaisDoAmbiente(email, senha)) {
+    tentativas.delete(ip);
+    const resposta = NextResponse.json({ ok: true });
+    resposta.cookies.set(COOKIE_ADMIN, criarToken({ tipo: "ambiente", email: email.trim() }), opcoesCookie(DURACAO_SEGUNDOS));
+    return resposta;
   }
 
-  tentativas.delete(ip);
-  const resposta = NextResponse.json({ ok: true });
-  resposta.cookies.set(COOKIE_ADMIN, criarToken(corpo.dados.email), opcoesCookie(DURACAO_SEGUNDOS));
-  return resposta;
+  const usuario = await autenticar(email, senha).catch(() => null);
+  if (usuario) {
+    tentativas.delete(ip);
+    await registrarAcesso(usuario.id).catch(() => {});
+    const resposta = NextResponse.json({ ok: true });
+    resposta.cookies.set(COOKIE_ADMIN, criarToken({ tipo: "painel", id: usuario.id }), opcoesCookie(DURACAO_SEGUNDOS));
+    return resposta;
+  }
+
+  registrarFalha(ip);
+  console.warn(`[auth] tentativa de login local malsucedida (ip ${ip}).`);
+  return NextResponse.json({ erro: "E-mail ou senha incorretos." }, { status: 401 });
 }

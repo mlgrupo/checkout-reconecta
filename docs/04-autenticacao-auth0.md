@@ -6,7 +6,29 @@ A plataforma aceita duas formas de entrar no painel:
 2. **Administrador local** — uma porta de entrada por e-mail e senha, para operar antes do Auth0 existir ou em
    emergência. Descrita logo abaixo.
 
-## Administrador local
+## Acessos do painel (sem Auth0)
+
+Enquanto o Auth0 não existe, a própria plataforma guarda quem entra. Em **Acessos**, um administrador cria uma
+entrada por pessoa, com nome, e-mail, senha e papel. A lista mostra papel, situação e último acesso.
+
+Como a senha é guardada: scrypt com sal aleatório por pessoa, no formato `scrypt$<sal>$<derivada>`. A senha em si
+nunca é gravada nem registrada em log. O mínimo é de 10 caracteres e senhas só de números são recusadas.
+
+O que vale a pena saber:
+
+- **Papel** define o que a pessoa pode fazer, igual ao Auth0: administrador, operador ou somente leitura.
+- **Desativar** mantém a pessoa na lista e corta a entrada na hora, inclusive sessões já abertas, porque a situação
+  é lida do banco a cada requisição.
+- Ninguém consegue desativar, rebaixar ou excluir o próprio acesso, para o painel nunca ficar sem administrador.
+- A senha é definida por quem cria, e o formulário sugere uma aleatória. Combine por um canal seguro; não há envio
+  de e-mail nesta fase.
+- O administrador do ambiente (abaixo) não aparece na lista e continua funcionando mesmo que todos os acessos
+  sejam desativados. É a porta de emergência.
+
+Quando o Auth0 entrar, a tela de Acessos volta sozinha a falar com a Management API e esses acessos deixam de ser
+usados. Remova `ADMIN_EMAIL` e `ADMIN_SENHA` e apague a tabela se quiser limpar.
+
+## Administrador do ambiente
 
 Defina as duas variáveis no ambiente (Railway, ou `.env` em desenvolvimento):
 

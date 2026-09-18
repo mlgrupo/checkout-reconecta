@@ -37,7 +37,7 @@ const itens: Item[] = [
   { href: "/produtos", rotulo: "Produtos", icone: <IconeCaixa /> },
   { href: "/links", rotulo: "Links de checkout", icone: <IconeLink /> },
   { href: "/aparencia", rotulo: "Aparência", icone: <IconePincel />, somenteAdmin: true },
-  { href: "/usuarios", rotulo: "Usuários", icone: <IconeUsuarios />, somenteAdmin: true },
+  { href: "/usuarios", rotulo: "Acessos", icone: <IconeUsuarios />, somenteAdmin: true },
   { href: "/configuracoes", rotulo: "Configurações", icone: <IconeEngrenagem />, somenteAdmin: true },
   { href: "/conta", rotulo: "Minha conta", icone: <IconeConta /> },
 ];
@@ -48,7 +48,7 @@ const titulos: Record<string, string> = {
   "/produtos": "Produtos",
   "/links": "Links de checkout",
   "/aparencia": "Aparência do checkout",
-  "/usuarios": "Usuários",
+  "/usuarios": "Acessos",
   "/configuracoes": "Configurações",
   "/conta": "Minha conta",
 };
