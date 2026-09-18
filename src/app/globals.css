@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   Checkout Reconecta — tokens de design
+   Branco é o material. Azul é o sinal. Dourado é a marca da
+   parceria (uso pontual). Bordô é reservado para o irreversível.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Cores base */
+  --color-branco: #ffffff;
+  --color-neve: #f5f8ff;        /* superfície de fundo (branco azulado) */
+  --color-gelo: #e4eaf8;        /* bordas e divisores */
+  --color-gelo-2: #f0f4fc;      /* hover suave */
+
+  /* Azul */
+  --color-azul-claro: #dfe7ff;
+  --color-azul-medio: #6b8cff;
+  --color-azul: #0b3dff;        /* primário */
+  --color-azul-escuro: #0629b8;
+  --color-azul-profundo: #041a7a;
+
+  /* Tinta (texto) — navy, nunca preto puro */
+  --color-marinho: #0a1633;
+  --color-marinho-2: #3b4a6b;   /* texto secundário */
+  --color-marinho-3: #7b88a6;   /* texto terciário / placeholders */
+
+  /* Dourado */
+  --color-dourado-claro: #f5ead0;
+  --color-dourado: #c9a227;
+  --color-dourado-escuro: #9a7a14;
+
+  /* Bordô */
+  --color-bordo-claro: #f7e4e8;
+  --color-bordo: #7a1e2e;
+  --color-bordo-escuro: #58121f;
+
+  /* Estados auxiliares (discretos) */
+  --color-verde-claro: #dff5ea;
+  --color-verde: #0f8a5f;
+  --color-ambar-claro: #fff1d6;
+  --color-ambar: #b26a00;
+
+  /* Tipografia */
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "Cascadia Mono", monospace;
+
+  /* Raios — hierarquia deliberada */
+  --radius-chip: 999px;
+  --radius-control: 8px;
+  --radius-panel: 14px;
+  --radius-card: 18px;
+
+  /* Sombras — azuladas, nunca cinza genérico */
+  --shadow-card: 0 1px 2px rgb(10 22 51 / 0.04), 0 12px 32px -12px rgb(11 61 255 / 0.12);
+  --shadow-drawer: -24px 0 48px -24px rgb(10 22 51 / 0.25);
+  --shadow-glow: 0 0 0 4px rgb(11 61 255 / 0.18);
+
+  /* Animações */
+  --animate-ring-draw: ring-draw 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  --animate-ring-orbit: ring-orbit 28s linear infinite;
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-slide-in: slide-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-slide-in-left: slide-in-left 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 0.2s ease-out both;
+
+  @keyframes ring-draw {
+    from { stroke-dashoffset: 1000; opacity: 0; }
+    20% { opacity: 1; }
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+  @keyframes ring-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-neve);
+    color: var(--color-marinho);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    color: var(--color-marinho);
+  }
+  ::selection {
+    background: var(--color-azul-claro);
+    color: var(--color-azul-profundo);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-azul);
+    outline-offset: 2px;
+  }
+  button, input, select, textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* Malha de pontos azul — assinatura de fundo das telas públicas */
+  .malha {
+    background-color: var(--color-branco);
+    background-image: radial-gradient(rgb(11 61 255 / 0.13) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Cantos em colchete dourado — destaque de painel */
+  .colchetes {
+    position: relative;
+  }
+  .colchetes::before,
+  .colchetes::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--color-dourado);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .colchetes::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+    border-top-left-radius: 4px;
+  }
+  .colchetes::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+    border-bottom-right-radius: 4px;
+  }
+
+  /* Anel dourado da tela de entrada */
+  .anel-traco {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: var(--animate-ring-draw);
+  }
+  .anel-orbita {
+    transform-origin: 50% 50%;
+    animation: var(--animate-ring-orbit);
+  }
+
+  /* Barra de rolagem discreta */
+  .rolagem-fina {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gelo) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anel-traco {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  .anel-orbita {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

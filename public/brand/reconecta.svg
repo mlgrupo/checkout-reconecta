@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="40" viewBox="0 0 180 40" data-placeholder="true" role="img" aria-label="Reconecta">
+  <!-- PLACEHOLDER: substitua por public/brand/reconecta.svg oficial. Mantenha o nome do arquivo. -->
+  <g fill="none" stroke="#0b3dff" stroke-width="2.5" stroke-linecap="round">
+    <circle cx="20" cy="20" r="13"/>
+    <path d="M12 20a8 8 0 0 1 8-8"/>
+  </g>
+  <circle cx="26" cy="26" r="3.2" fill="#c9a227"/>
+  <text x="44" y="26" font-family="Sora, 'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#0a1633" letter-spacing="-0.4">Reconecta</text>
+</svg>
