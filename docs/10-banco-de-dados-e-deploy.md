@@ -71,11 +71,32 @@ Ao colar a chave do Asaas, troque também `ASAAS_ENV` para `sandbox` (e depois `
 No Auth0, as URLs desta instalação são `https://checkout-reconecta-production.up.railway.app/auth/callback`
 (callback) e a raiz do domínio (logout e web origin).
 
-### Deploy automático
+### Estado verificado em 18/09/2026
+
+| Verificação | Resultado |
+|-------------|-----------|
+| `/api/saude` | `{"ok":true,"banco":"postgres","asaas":"simulacao"}` |
+| `/entrar` | 200, com o aviso de Auth0 ainda não configurado |
+| `/painel` sem sessão | 307 para `/entrar` |
+| `/api/admin/*` sem sessão | 401 |
+| Webhook com token correto | `{"ok":true,"resultado":"sem_pedido"}`; reenvio do mesmo evento → `duplicado` |
+| Webhook com token errado | 401 |
+| `/api/dev/seed` e `/dev/galeria` | 404 (bloqueados em produção) |
+
+### Build e deploy automático
+
+O Railway monta o serviço com **Railpack**, que detecta `pnpm-lock.yaml` e o campo `packageManager`, roda
+`pnpm install --frozen-lockfile` + `pnpm build` e sobe com `pnpm start`. O `railway.json` do repositório só define o
+que roda depois do build (start, healthcheck e política de reinício).
 
 O primeiro deploy foi feito pela CLI (`railway up`). Para cada push em `main` gerar um deploy sozinho, conecte o
 repositório em **Settings → Source → Connect Repo** → `mlgrupo/checkout-reconecta`, branch `main`. As variáveis e o
 domínio continuam os mesmos.
+
+### Criar produtos e links em produção
+
+`/api/dev/seed` não existe em produção. Para cadastrar o primeiro produto e link é preciso entrar no painel, o que
+exige o Auth0 configurado. Enquanto isso, o checkout público continua testável em desenvolvimento local.
 
 ## Deploy no Railway (do zero)
 
