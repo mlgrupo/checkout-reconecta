@@ -2,6 +2,13 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.6.0] — 2026-09-18
+
+### Adicionado
+
+- Tipografia no editor: escolha da fonte do checkout (sete opções, com aviso quando a fonte é externa), alinhamento do cabeçalho, tamanho do título com controle deslizante, negrito e itálico.
+- O tamanho do título é o máximo: em telas estreitas ele encolhe sozinho, medindo a largura do checkout em vez da janela.
+
 ## [0.5.1] — 2026-09-18
 
 ### Mudado

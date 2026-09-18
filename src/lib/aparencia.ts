@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ehHexValido } from "@/lib/cores";
+import { IDS_FONTES } from "@/lib/fontes";
 
 /**
  * Aparência do checkout: o que o editor controla.
@@ -31,6 +32,24 @@ export const BLOCO_INFO: Record<Bloco, { rotulo: string; descricao: string }> = 
   depoimentos: { rotulo: "Depoimentos", descricao: "Provas sociais de quem já comprou." },
 };
 
+export const ALINHAMENTOS = ["esquerda", "centro", "direita"] as const;
+export type Alinhamento = (typeof ALINHAMENTOS)[number];
+
+export const ALINHAMENTO_CLASSE: Record<Alinhamento, string> = {
+  esquerda: "text-left",
+  centro: "text-center",
+  direita: "text-right",
+};
+
+/** Tipografia do cabeçalho da oferta e da fonte do checkout inteiro. */
+export type Tipografia = {
+  fonte: string;
+  alinhamento: Alinhamento;
+  tituloTamanho: number;
+  tituloNegrito: boolean;
+  tituloItalico: boolean;
+};
+
 export const FUNDOS = ["claro", "escuro"] as const;
 export type Fundo = (typeof FUNDOS)[number];
 
@@ -42,6 +61,7 @@ export type Aparencia = {
   fundo: Fundo;
   ladoResumo: LadoResumo;
   ordem: Bloco[];
+  tipografia: Tipografia;
   corPrincipal: string;
   bannerUrl: string | null;
   titulo: string | null;
@@ -59,6 +79,7 @@ export const APARENCIA_PADRAO: Aparencia = {
   fundo: "claro",
   ladoResumo: "direita",
   ordem: [...BLOCOS],
+  tipografia: { fonte: "sistema", alinhamento: "esquerda", tituloTamanho: 30, tituloNegrito: true, tituloItalico: false },
   corPrincipal: "#0b3dff",
   bannerUrl: null,
   titulo: null,
@@ -114,6 +135,15 @@ export const schemaAparencia = z.object({
   modelo: z.enum(MODELOS).optional(),
   fundo: z.enum(FUNDOS).optional(),
   ladoResumo: z.enum(LADOS).optional(),
+  tipografia: z
+    .object({
+      fonte: z.string().refine((v) => IDS_FONTES.includes(v), "Fonte não disponível."),
+      alinhamento: z.enum(ALINHAMENTOS),
+      tituloTamanho: z.number().int().min(16, "Mínimo de 16 pixels.").max(64, "Máximo de 64 pixels."),
+      tituloNegrito: z.boolean(),
+      tituloItalico: z.boolean(),
+    })
+    .optional(),
   ordem: z
     .array(z.enum(BLOCOS))
     .optional()

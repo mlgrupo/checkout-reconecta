@@ -7,10 +7,11 @@ import { MolduraCheckout } from "@/components/checkout/moldura";
 import { TemaCheckout } from "@/components/checkout/tema";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Campo, Entrada, Interruptor } from "@/components/ui/field";
+import { Campo, Entrada, Interruptor, Selecao } from "@/components/ui/field";
 import { IconeAtualizar, IconeFechar, IconeMais, IconeSeta, IconeUpload } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import {
+  ALINHAMENTOS,
   APARENCIA_PADRAO,
   BLOCO_INFO,
   FUNDOS,
@@ -23,6 +24,7 @@ import {
   type Modelo,
 } from "@/lib/aparencia";
 import { ehHexValido, normalizarHex } from "@/lib/cores";
+import { acharFonte, FONTES } from "@/lib/fontes";
 import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import type { CheckoutPublico } from "@/lib/links";
 import { cn } from "@/lib/utils";
@@ -150,6 +152,8 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
   const arquivoRef = useRef<HTMLInputElement>(null);
 
   const mudar = <K extends keyof Aparencia>(chave: K, valor: Aparencia[K]) => setA((atual) => ({ ...atual, [chave]: valor }));
+  const mudarTipografia = (parcial: Partial<Aparencia["tipografia"]>) =>
+    setA((atual) => ({ ...atual, tipografia: { ...atual.tipografia, ...parcial } }));
   const alterado = useMemo(() => JSON.stringify(a) !== JSON.stringify(inicial), [a, inicial]);
 
   const checkoutPrevia: CheckoutPublico = useMemo(() => ({ ...base, aparencia: a }), [base, a]);
@@ -305,6 +309,88 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
       <Secao titulo="Cor" descricao="Usada nos botões, nos destaques e no método de pagamento selecionado.">
         <Campo rotulo="Cor principal" erro={erros.corPrincipal}>
           <EntradaCor valor={a.corPrincipal} onChange={(v) => mudar("corPrincipal", v)} />
+        </Campo>
+      </Secao>
+
+      <Secao titulo="Tipografia" descricao="A fonte vale para o checkout inteiro. O resto é do título e do subtítulo.">
+        <Campo rotulo="Fonte" htmlFor="t-fonte" erro={erros["tipografia.fonte"]}>
+          <Selecao id="t-fonte" value={a.tipografia.fonte} onChange={(e) => mudarTipografia({ fonte: e.target.value })}>
+            {FONTES.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.nome}
+              </option>
+            ))}
+          </Selecao>
+        </Campo>
+        {acharFonte(a.tipografia.fonte).google && (
+          <p className="text-[12px] text-marinho-3">
+            Esta fonte é carregada do Google Fonts, o que soma uma requisição à página de pagamento.
+          </p>
+        )}
+
+        <Campo rotulo="Alinhamento">
+          <div className="grid grid-cols-3 gap-2">
+            {ALINHAMENTOS.map((al) => (
+              <button
+                key={al}
+                type="button"
+                onClick={() => mudarTipografia({ alinhamento: al })}
+                className={cn(
+                  "rounded-control border px-2 py-2 text-[13px] font-medium capitalize transition-colors",
+                  a.tipografia.alinhamento === al
+                    ? "border-azul bg-azul-claro/50 text-azul-profundo"
+                    : "border-gelo text-marinho-2 hover:border-azul-medio",
+                )}
+              >
+                {al}
+              </button>
+            ))}
+          </div>
+        </Campo>
+
+        <Campo
+          rotulo={`Tamanho do título: ${a.tipografia.tituloTamanho} px`}
+          htmlFor="t-tamanho"
+          erro={erros["tipografia.tituloTamanho"]}
+          dica="Em telas estreitas o título encolhe sozinho a partir deste tamanho."
+        >
+          <input
+            id="t-tamanho"
+            type="range"
+            min={16}
+            max={64}
+            step={1}
+            value={a.tipografia.tituloTamanho}
+            onChange={(e) => mudarTipografia({ tituloTamanho: Number(e.target.value) })}
+            className="w-full accent-azul"
+          />
+        </Campo>
+
+        <Campo rotulo="Estilo do título">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              aria-pressed={a.tipografia.tituloNegrito}
+              onClick={() => mudarTipografia({ tituloNegrito: !a.tipografia.tituloNegrito })}
+              className={cn(
+                "h-10 w-12 rounded-control border font-bold transition-colors",
+                a.tipografia.tituloNegrito ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
+              )}
+            >
+              N
+            </button>
+            <button
+              type="button"
+              aria-pressed={a.tipografia.tituloItalico}
+              onClick={() => mudarTipografia({ tituloItalico: !a.tipografia.tituloItalico })}
+              className={cn(
+                "h-10 w-12 rounded-control border font-serif italic transition-colors",
+                a.tipografia.tituloItalico ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
+              )}
+            >
+              I
+            </button>
+          </div>
         </Campo>
       </Secao>
 

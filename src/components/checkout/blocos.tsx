@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { IconeEscudo, IconeRelogio } from "@/components/ui/icons";
-import type { Aparencia, Depoimento } from "@/lib/aparencia";
+import { ALINHAMENTO_CLASSE, type Aparencia, type Depoimento } from "@/lib/aparencia";
+import { cn } from "@/lib/utils";
 
 /**
  * Blocos opcionais do checkout, ligados no editor: cronômetro, depoimentos e selo de garantia.
@@ -108,13 +109,32 @@ export function BannerCheckout({ url }: { url: string }) {
   return <img src={url} alt="" className="mb-5 w-full rounded-card border border-gelo object-cover shadow-card" />;
 }
 
-/** Título e subtítulo opcionais, acima do formulário. */
+/**
+ * Título e subtítulo opcionais, acima do formulário.
+ * O tamanho escolhido é o máximo: em contêiner estreito ele encolhe com `cqw`,
+ * que mede a largura do próprio checkout e não a da janela.
+ */
 export function CabecalhoOferta({ aparencia }: { aparencia: Aparencia }) {
   if (!aparencia.titulo && !aparencia.subtitulo) return null;
+  const t = aparencia.tipografia;
+  const tamanhoTitulo = `clamp(${Math.round(t.tituloTamanho * 0.68)}px, ${(t.tituloTamanho / 4.8).toFixed(2)}cqw, ${t.tituloTamanho}px)`;
+  const tamanhoSubtitulo = `clamp(13px, ${(t.tituloTamanho / 11).toFixed(2)}cqw, ${Math.max(14, Math.round(t.tituloTamanho * 0.5))}px)`;
+
   return (
-    <header className="mb-5">
-      {aparencia.titulo && <h1 className="text-2xl font-semibold leading-tight @xl:text-3xl">{aparencia.titulo}</h1>}
-      {aparencia.subtitulo && <p className="mt-1.5 text-[15px] text-marinho-2">{aparencia.subtitulo}</p>}
+    <header className={cn("mb-5", ALINHAMENTO_CLASSE[t.alinhamento])}>
+      {aparencia.titulo && (
+        <h1
+          className={cn("leading-tight", t.tituloNegrito ? "font-bold" : "font-normal", t.tituloItalico && "italic")}
+          style={{ fontSize: tamanhoTitulo }}
+        >
+          {aparencia.titulo}
+        </h1>
+      )}
+      {aparencia.subtitulo && (
+        <p className={cn("mt-1.5 text-marinho-2", t.tituloItalico && "italic")} style={{ fontSize: tamanhoSubtitulo }}>
+          {aparencia.subtitulo}
+        </p>
+      )}
     </header>
   );
 }

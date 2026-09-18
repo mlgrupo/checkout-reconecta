@@ -19,6 +19,7 @@ não personalizados do link acompanham sozinhos.
 | Fundo | Claro ou escuro. O escuro inverte as superfícies e a tinta, mantendo a cor principal. |
 | Ordem dos blocos | Seus dados, pagamento, order bump, garantia e depoimentos em qualquer ordem. A numeração das etapas e a navegação por teclado seguem a ordem escolhida. |
 | Cor principal | Botões, passos numerados, método selecionado, links e foco. As variações de hover e fundo saem dela. |
+| Tipografia | Fonte do checkout inteiro, alinhamento do cabeçalho, tamanho do título, negrito e itálico. |
 | Banner | Imagem larga acima de tudo. |
 | Título e subtítulo | Chamada antes do formulário. Em branco, o checkout começa direto nos campos. |
 | Texto do botão | Substitui o texto automático ("Pagar R$ 544,00 com Pix"). |
@@ -44,6 +45,22 @@ usado como texto sobre esse tingimento, fica claro. É o que mantém legível o 
 Duas regras ficam fora das camadas do Tailwind de propósito, em `globals.css`: a cor do texto sobre a cor
 principal e o fundo da pílula do selo Asaas. Regras sem camada vencem as utilitárias, que é o necessário para
 sobrescrever `text-branco` e `bg-marinho` quando o tema inverte os tokens.
+
+## Tipografia
+
+A fonte vale para o checkout inteiro: títulos e corpo. A lista em `src/lib/fontes.ts` é curta de propósito, porque
+cada fonte escolhida vira **uma requisição externa** na página mais sensível a atraso da plataforma. A opção
+"Padrão da plataforma" usa Sora e IBM Plex, que já vêm com a aplicação e não pedem nada de fora.
+
+Quando a fonte é externa, o próprio `TemaCheckout` insere a folha do Google Fonts com `display=swap`. O React leva
+a tag para o `<head>` e não repete se ela já estiver lá, então o editor e a página pública compartilham a mesma
+folha sem duplicar.
+
+O tamanho do título é o **máximo**. Em contêiner estreito ele encolhe sozinho, porque o valor aplicado é um
+`clamp()` em `cqw`, que mede a largura do checkout e não a da janela. Assim um título de 44 px cabe no celular sem
+quebrar em quatro linhas, e a prévia mostra isso fielmente.
+
+Alinhamento, negrito e itálico valem para o cabeçalho da oferta (título e subtítulo).
 
 ## Bandeiras de cartão
 
