@@ -14,7 +14,7 @@ não personalizados do link acompanham sozinhos.
 
 | Item | Efeito no checkout |
 |------|--------------------|
-| Modelo | **Clássico** (duas colunas, resumo fixo ao lado), **Compacto** (uma coluna, resumo no topo) ou **Focado** (coluna estreita centralizada). |
+| Modelo | **Clássico** (duas colunas, resumo fixo ao lado), **Compacto** (uma coluna, resumo no topo), **Focado** (coluna estreita centralizada) ou **Cartão único** (tudo numa moldura só). |
 | Lado do resumo | Só no clássico: resumo à direita ou à esquerda do formulário. |
 | Fundo | Tema claro ou escuro, mais cor livre e imagem de fundo com véu. |
 | Ordem dos blocos | Seus dados, pagamento, order bump, garantia e depoimentos em qualquer ordem. A numeração das etapas e a navegação por teclado seguem a ordem escolhida. |
@@ -29,6 +29,37 @@ não personalizados do link acompanham sozinhos.
 
 O selo do Asaas, o rodapé de segurança e o destaque dourado do order bump não são editáveis: fazem parte da
 identidade da parceria e da hierarquia visual do design system.
+
+## Cartão único
+
+O quarto modelo segue o formato das páginas de venda de infoproduto, em que a pessoa chega pelo anúncio e decide na
+mesma tela. Tudo vive dentro de uma moldura de 520 pixels, separada por linhas em vez de cartões soltos:
+
+1. **Faixa do produto** com foto, nome e o preço do jeito que será cobrado. Escolhendo 6x, o destaque vira
+   "6x de R$ 100,39" e abaixo aparece "ou R$ 544,00 à vista".
+2. **Seus dados**, com os campos sempre em uma coluna.
+3. **Escolha a forma de pagamento**, uma linha por meio. O escolhido abre os campos ali mesmo e os outros continuam
+   visíveis, então trocar de Pix para cartão não muda a página de lugar.
+4. **Order bump**, no cartão dourado com a caixa "Adicionar produto" no rodapé. Aqui a oferta não some ao ser aceita:
+   a caixa fica marcada e dá para desmarcar.
+5. **Detalhes da compra** e o botão, juntos. É o resumo de sempre, mas colado na decisão.
+
+O rodapé da página fica marinho e na largura do cartão, com suporte, texto legal e o selo do Asaas.
+
+Os outros três modelos não mudaram. O que é diferente aqui:
+
+| | Clássico, compacto e focado | Cartão único |
+|---|---|---|
+| Seções | Um cartão branco cada | Uma moldura, divididas por linha |
+| Etapas | Numeradas (1, 2) | Títulos sem número |
+| Pagamento | Três abas lado a lado | Uma linha por meio, que abre |
+| Order bump | Some ao ser aceito | Continua, com a caixa marcada |
+| Resumo | Ao lado ou no topo | Acima do botão |
+| Rodapé | Claro, largura total | Marinho, largura do cartão |
+
+**Por que os campos não usam duas colunas aqui.** As quebras `@xl:` medem o contêiner do checkout, que é a página
+inteira, e não o cartão. Num cartão de 520 pixels elas continuariam valendo no computador e espremeriam os campos,
+então o modelo força uma coluna.
 
 ## Como a cor é aplicada
 

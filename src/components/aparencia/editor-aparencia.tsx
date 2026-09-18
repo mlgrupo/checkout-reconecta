@@ -116,6 +116,17 @@ function DiagramaModelo({ modelo, lado }: { modelo: Modelo; lado: LadoResumo }) 
       </span>
     );
   }
+  if (modelo === "unico") {
+    return (
+      <span className="flex h-8 w-12 justify-center">
+        <span className="grid w-6 grid-rows-[6px_1fr_6px] gap-[3px]">
+          {resumo}
+          {form}
+          {resumo}
+        </span>
+      </span>
+    );
+  }
   if (modelo === "compacto") {
     return (
       <span className="grid h-8 w-12 grid-rows-[8px_1fr] gap-1">
@@ -221,7 +232,7 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
   const painel = (
     <div className="rolagem-fina flex flex-col rounded-card border border-gelo bg-branco shadow-card lg:max-h-[calc(100dvh-180px)] lg:overflow-y-auto">
       <Secao titulo="Modelo" descricao="Onde o resumo fica e a largura da página.">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {MODELOS.map((m) => (
             <button
               key={m}
@@ -686,7 +697,7 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
       <div className="rolagem-fina max-h-[calc(100dvh-220px)] overflow-y-auto p-4">
         <PreviaEscalada largura={larguraPrevia === "celular" ? 390 : 1180}>
           <TemaCheckout aparencia={a}>
-            <MolduraCheckout nomeLoja="Reconecta">
+            <MolduraCheckout nomeLoja="Reconecta" rodapeEscuro={a.modelo === "unico"}>
               <Checkout checkout={checkoutPrevia} modoPrevia />
             </MolduraCheckout>
           </TemaCheckout>

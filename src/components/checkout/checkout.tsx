@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BandeirasAceitas } from "@/components/checkout/bandeiras";
 import { BannerCheckout, CabecalhoOferta, Cronometro, Depoimentos, Garantia } from "@/components/checkout/blocos";
+import { SeloAsaas } from "@/components/brand/selo-asaas";
 import { Button } from "@/components/ui/button";
 import { Escolha } from "@/components/ui/escolha";
 import { Campo, Entrada } from "@/components/ui/field";
@@ -214,6 +215,28 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
   const numerados: Bloco[] = aparencia.ordem.filter((b) => b === "dados" || b === "pagamento");
   const numeroDe = (bloco: Bloco) => numerados.indexOf(bloco) + 1;
 
+  /**
+   * Modelo "cartão único": todas as seções dividem uma moldura estreita, então elas perdem
+   * o cartão próprio e os campos ficam sempre em uma coluna. As quebras `@xl:` medem a largura
+   * da página inteira, que é larga mesmo aqui, e espremeriam os campos dentro do cartão.
+   */
+  const cartaoUnico = aparencia.modelo === "unico";
+  const classeSecao = cartaoUnico ? "px-5 py-5 @xl:px-6" : "rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6";
+  const gradeCampos = cartaoUnico ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 @xl:grid-cols-2";
+  const larguraTotal = cartaoUnico ? undefined : "@xl:col-span-2";
+
+  const tituloSecao = (bloco: Bloco, texto: string) =>
+    cartaoUnico ? (
+      <h2 className="text-[15px] font-semibold text-marinho">{texto}</h2>
+    ) : (
+      <h2 className="flex items-center gap-3 text-[15px] font-semibold">
+        <span className="sobre-primaria flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">
+          {numeroDe(bloco)}
+        </span>
+        {texto}
+      </h2>
+    );
+
   // Resumo do pedido. No modelo clássico ele fica fixo ao lado; nos outros, no topo.
   const resumoAoLado = aparencia.modelo === "classico";
   const resumo = (
@@ -283,15 +306,10 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
   );
 
   const blocoDados = (
-        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
-          <h2 className="flex items-center gap-3 text-[15px] font-semibold">
-            <span className="sobre-primaria flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">
-              {numeroDe("dados")}
-            </span>
-            Seus dados
-          </h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 @xl:grid-cols-2">
-            <Campo rotulo="Nome completo" htmlFor="nome" erro={erro("nome", errosCliente.nome)} className="@xl:col-span-2">
+        <section className={classeSecao}>
+          {tituloSecao("dados", "Seus dados")}
+          <div className={cn("mt-4", gradeCampos)}>
+            <Campo rotulo="Nome completo" htmlFor="nome" erro={erro("nome", errosCliente.nome)} className={larguraTotal}>
               <Entrada id="nome" autoComplete="name" value={cliente.nome} onChange={(e) => setCliente({ ...cliente, nome: e.target.value })} onBlur={() => tocar("nome")} aria-invalid={Boolean(erro("nome", errosCliente.nome))} />
             </Campo>
             <Campo rotulo="E-mail" htmlFor="email" erro={erro("email", errosCliente.email)} dica="Enviamos a confirmação e o acesso para este e-mail.">
@@ -300,58 +318,17 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             <Campo rotulo="Celular" htmlFor="telefone" erro={erro("telefone", errosCliente.telefone)}>
               <Entrada id="telefone" type="tel" inputMode="tel" autoComplete="tel-national" value={cliente.telefone} onChange={(e) => setCliente({ ...cliente, telefone: mascararTelefone(e.target.value) })} onBlur={() => tocar("telefone")} placeholder="(11) 99999-9999" aria-invalid={Boolean(erro("telefone", errosCliente.telefone))} />
             </Campo>
-            <Campo rotulo="CPF ou CNPJ" htmlFor="cpf" erro={erro("cpfCnpj", errosCliente.cpfCnpj)} className="@xl:col-span-2">
+            <Campo rotulo="CPF ou CNPJ" htmlFor="cpf" erro={erro("cpfCnpj", errosCliente.cpfCnpj)} className={larguraTotal}>
               <Entrada id="cpf" inputMode="numeric" value={cliente.cpfCnpj} onChange={(e) => setCliente({ ...cliente, cpfCnpj: mascararCpfCnpj(e.target.value) })} onBlur={() => tocar("cpfCnpj")} placeholder="000.000.000-00" aria-invalid={Boolean(erro("cpfCnpj", errosCliente.cpfCnpj))} />
             </Campo>
           </div>
         </section>
   );
 
-  const blocoPagamento = (
-        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
-          <h2 className="flex items-center gap-3 text-[15px] font-semibold">
-            <span className="sobre-primaria flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">
-              {numeroDe("pagamento")}
-            </span>
-            Pagamento
-          </h2>
-          <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${metodosDisponiveis.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label="Forma de pagamento">
-            {metodosDisponiveis.map((m) => {
-              const ativo = m === metodo;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={ativo}
-                  onClick={() => setMetodo(m)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 rounded-panel border px-2 py-3 text-center transition-colors",
-                    ativo ? "border-azul bg-azul-claro/50 text-azul-profundo shadow-glow" : "border-gelo text-marinho-2 hover:border-azul-medio",
-                  )}
-                >
-                  {ICONES[m]}
-                  <span className="text-sm font-medium">{METODO_INFO[m].rotulo}</span>
-                  <span className="text-[11px] leading-tight text-marinho-3">{METODO_INFO[m].descricao}</span>
-                </button>
-              );
-            })}
-          </div>
-
-
-          {metodo === "pix" && (
-            <p className="mt-4 rounded-panel border border-gelo bg-neve px-4 py-3 text-[13px] text-marinho-2">
-              Ao continuar, você recebe um QR Code e um código copia e cola. A confirmação é automática, em segundos.
-            </p>
-          )}
-          {metodo === "boleto" && (
-            <p className="mt-4 rounded-panel border border-gelo bg-neve px-4 py-3 text-[13px] text-marinho-2">
-              O boleto vence em 3 dias e pode ser pago em qualquer banco ou app. A liberação acontece após a compensação.
-            </p>
-          )}
-          {metodo === "cartao" && (
-            <div className="mt-4 grid grid-cols-1 gap-4 @xl:grid-cols-2">
-              <Campo rotulo="Número do cartão" htmlFor="c-numero" erro={erro("numero", errosCartao.numero)} className="@xl:col-span-2">
+  /* Campos e avisos de cada meio de pagamento, usados nos dois formatos de seleção. */
+  const camposCartao = (
+            <div className={gradeCampos}>
+              <Campo rotulo="Número do cartão" htmlFor="c-numero" erro={erro("numero", errosCartao.numero)} className={larguraTotal}>
                 {/* As bandeiras ficam sob o campo e continuam visíveis mesmo com erro. */}
                 <div className="flex flex-col gap-2">
                   <Entrada
@@ -367,31 +344,33 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                   <BandeirasAceitas detectada={bandeira?.id ?? null} />
                 </div>
               </Campo>
-              <Campo rotulo="Nome impresso no cartão" htmlFor="c-nome" erro={erro("nomeCartao", errosCartao.nome)} className="@xl:col-span-2">
+              <Campo rotulo="Nome impresso no cartão" htmlFor="c-nome" erro={erro("nomeCartao", errosCartao.nome)} className={larguraTotal}>
                 <Entrada id="c-nome" autoComplete="cc-name" value={cartao.nome} onChange={(e) => setCartao({ ...cartao, nome: e.target.value.toUpperCase() })} onBlur={() => tocar("nomeCartao")} aria-invalid={Boolean(erro("nomeCartao", errosCartao.nome))} />
               </Campo>
-              <Campo rotulo="Validade" htmlFor="c-validade" erro={erro("validade", errosCartao.validade)}>
-                <Entrada id="c-validade" inputMode="numeric" autoComplete="cc-exp" value={cartao.validade} onChange={(e) => setCartao({ ...cartao, validade: mascararValidade(e.target.value) })} onBlur={() => tocar("validade")} placeholder="MM/AA" aria-invalid={Boolean(erro("validade", errosCartao.validade))} />
-              </Campo>
-              <Campo rotulo="CVV" htmlFor="c-cvv" erro={erro("cvv", errosCartao.cvv)}>
-                <Entrada id="c-cvv" inputMode="numeric" autoComplete="cc-csc" value={cartao.cvv} onChange={(e) => setCartao({ ...cartao, cvv: somenteDigitos(e.target.value).slice(0, cvvNecessario) })} onBlur={() => tocar("cvv")} placeholder={cvvNecessario === 4 ? "1234" : "123"} aria-invalid={Boolean(erro("cvv", errosCartao.cvv))} />
-              </Campo>
-              <Campo rotulo="CEP do titular" htmlFor="c-cep" erro={erro("cep", errosCartao.cep)}>
-                <Entrada id="c-cep" inputMode="numeric" autoComplete="postal-code" value={cartao.cep} onChange={(e) => setCartao({ ...cartao, cep: mascararCep(e.target.value) })} onBlur={() => tocar("cep")} placeholder="00000-000" aria-invalid={Boolean(erro("cep", errosCartao.cep))} />
-              </Campo>
               <div className="grid grid-cols-2 gap-3">
+                <Campo rotulo="Validade" htmlFor="c-validade" erro={erro("validade", errosCartao.validade)}>
+                  <Entrada id="c-validade" inputMode="numeric" autoComplete="cc-exp" value={cartao.validade} onChange={(e) => setCartao({ ...cartao, validade: mascararValidade(e.target.value) })} onBlur={() => tocar("validade")} placeholder="MM/AA" aria-invalid={Boolean(erro("validade", errosCartao.validade))} />
+                </Campo>
+                <Campo rotulo="CVV" htmlFor="c-cvv" erro={erro("cvv", errosCartao.cvv)}>
+                  <Entrada id="c-cvv" inputMode="numeric" autoComplete="cc-csc" value={cartao.cvv} onChange={(e) => setCartao({ ...cartao, cvv: somenteDigitos(e.target.value).slice(0, cvvNecessario) })} onBlur={() => tocar("cvv")} placeholder={cvvNecessario === 4 ? "1234" : "123"} aria-invalid={Boolean(erro("cvv", errosCartao.cvv))} />
+                </Campo>
+              </div>
+              <div className="grid grid-cols-[minmax(0,1fr)_92px] gap-3">
+                <Campo rotulo="CEP do titular" htmlFor="c-cep" erro={erro("cep", errosCartao.cep)}>
+                  <Entrada id="c-cep" inputMode="numeric" autoComplete="postal-code" value={cartao.cep} onChange={(e) => setCartao({ ...cartao, cep: mascararCep(e.target.value) })} onBlur={() => tocar("cep")} placeholder="00000-000" aria-invalid={Boolean(erro("cep", errosCartao.cep))} />
+                </Campo>
                 <Campo rotulo="Número" htmlFor="c-num-end" erro={erro("numeroEndereco", errosCartao.numeroEndereco)}>
                   <Entrada id="c-num-end" value={cartao.numeroEndereco} onChange={(e) => setCartao({ ...cartao, numeroEndereco: e.target.value })} onBlur={() => tocar("numeroEndereco")} aria-invalid={Boolean(erro("numeroEndereco", errosCartao.numeroEndereco))} />
                 </Campo>
-                <Campo rotulo="Complemento" htmlFor="c-compl" opcional>
-                  <Entrada id="c-compl" value={cartao.complemento} onChange={(e) => setCartao({ ...cartao, complemento: e.target.value })} />
-                </Campo>
               </div>
+              <Campo rotulo="Complemento" htmlFor="c-compl" opcional className={larguraTotal}>
+                <Entrada id="c-compl" value={cartao.complemento} onChange={(e) => setCartao({ ...cartao, complemento: e.target.value })} />
+              </Campo>
               {opcoesParcelas.length > 1 && (
                 <Campo
-                  rotulo="Parcelas"
+                  rotulo={cartaoUnico ? "Selecione o número de parcelas" : "Parcelas"}
                   htmlFor="c-parcelas"
-                  className="@xl:col-span-2"
+                  className={larguraTotal}
                   dica={
                     checkout.parcelamento.jurosMensalBps > 0 && checkout.parcelamento.parcelasSemJuros < checkout.parcelamento.parcelasMax
                       ? `Até ${checkout.parcelamento.parcelasSemJuros}x sem juros. Acima disso, ${taxaEmTexto(checkout.parcelamento.jurosMensalBps)}.`
@@ -414,52 +393,299 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                 </Campo>
               )}
             </div>
-          )}
+  );
+
+  const conteudoDoMetodo: Record<Metodo, ReactNode> = {
+    pix: <p className="text-[13px] text-marinho-2">Ao continuar, você recebe um QR Code e um código copia e cola. A confirmação é automática, em segundos.</p>,
+    boleto: <p className="text-[13px] text-marinho-2">O boleto vence em 3 dias e pode ser pago em qualquer banco ou app. A liberação acontece após a compensação.</p>,
+    cartao: camposCartao,
+  };
+
+  /* Seleção em abas: os métodos lado a lado e o conteúdo abaixo. */
+  const abasPagamento = (
+          <>
+            <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${metodosDisponiveis.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label="Forma de pagamento">
+              {metodosDisponiveis.map((m) => {
+                const ativo = m === metodo;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    role="radio"
+                    aria-checked={ativo}
+                    onClick={() => setMetodo(m)}
+                    className={cn(
+                      "flex flex-col items-center gap-1 rounded-panel border px-2 py-3 text-center transition-colors",
+                      ativo ? "border-azul bg-azul-claro/50 text-azul-profundo shadow-glow" : "border-gelo text-marinho-2 hover:border-azul-medio",
+                    )}
+                  >
+                    {ICONES[m]}
+                    <span className="text-sm font-medium">{METODO_INFO[m].rotulo}</span>
+                    <span className="text-[11px] leading-tight text-marinho-3">{METODO_INFO[m].descricao}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {metodo === "cartao" ? (
+              <div className="mt-4">{conteudoDoMetodo.cartao}</div>
+            ) : (
+              <div className="mt-4 rounded-panel border border-gelo bg-neve px-4 py-3">{conteudoDoMetodo[metodo]}</div>
+            )}
+          </>
+  );
+
+  /* Seleção em lista: um método por linha, e o escolhido abre os campos ali mesmo. */
+  const listaPagamento = (
+          <div className="mt-3 flex flex-col gap-2" role="radiogroup" aria-label="Forma de pagamento">
+            {metodosDisponiveis.map((m) => {
+              const ativo = m === metodo;
+              return (
+                <div
+                  key={m}
+                  className={cn("overflow-hidden rounded-panel border transition-colors", ativo ? "border-azul" : "border-gelo hover:border-azul-medio")}
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={ativo}
+                    onClick={() => setMetodo(m)}
+                    className={cn("flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors", ativo ? "bg-azul-claro/40" : "hover:bg-gelo-2")}
+                  >
+                    <span
+                      aria-hidden
+                      className={cn("flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-chip border-2", ativo ? "border-azul" : "border-gelo")}
+                    >
+                      {ativo && <span className="h-2 w-2 rounded-chip bg-azul" />}
+                    </span>
+                    <span className={cn("shrink-0", ativo ? "text-azul-profundo" : "text-marinho-3")}>{ICONES[m]}</span>
+                    <span className={cn("text-sm font-medium", ativo ? "text-azul-profundo" : "text-marinho")}>{METODO_INFO[m].rotulo}</span>
+                  </button>
+                  {ativo && <div className="border-t border-gelo px-4 py-4">{conteudoDoMetodo[m]}</div>}
+                </div>
+              );
+            })}
+          </div>
+  );
+
+  const blocoPagamento = (
+        <section className={classeSecao}>
+          {tituloSecao("pagamento", cartaoUnico ? "Escolha a forma de pagamento" : "Pagamento")}
+          {cartaoUnico ? listaPagamento : abasPagamento}
         </section>
   );
 
-  /* Order bump: some ao ser aceito e vira item do resumo */
-  const blocoBump =
-        checkout.bump &&
-          (bumpAceito ? (
-            <div className="flex items-center justify-between gap-3 rounded-panel border border-verde/30 bg-verde-claro px-4 py-3 text-sm text-verde">
-              <span className="flex items-center gap-2">
-                <IconeCheck tamanho={16} />
-                {checkout.bump.nome} adicionado ao seu pedido por {dinheiro(checkout.bump.precoCentavos)}.
-              </span>
-              <button type="button" onClick={alternarBump} className="text-[13px] font-medium text-marinho-2 hover:underline">
-                Remover
-              </button>
-            </div>
-          ) : (
-            <label className="colchetes flex cursor-pointer gap-4 rounded-card border-2 border-dashed border-dourado bg-dourado-claro/40 p-4 transition-colors hover:bg-dourado-claro/70 @xl:p-5">
-              <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-azul" checked={false} onChange={alternarBump} aria-label={`Adicionar ${checkout.bump.nome}`} />
-              <div className="flex min-w-0 flex-1 gap-4">
-                {checkout.bump.imagem && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={checkout.bump.imagem} alt="" className="hidden h-16 w-16 shrink-0 rounded-panel border border-gelo object-cover @xl:block" />
+  /* Order bump em cartão dourado. É o único uso de dourado da tela. */
+  const cartaoBump = checkout.bump && (
+    <div
+      className={cn(
+        "overflow-hidden rounded-panel border-2 transition-colors",
+        bumpAceito ? "border-dourado bg-dourado-claro/25" : "border-dourado/60 hover:border-dourado",
+      )}
+    >
+      <div className="flex gap-3 p-4">
+        {checkout.bump.imagem && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={checkout.bump.imagem} alt="" className="h-14 w-14 shrink-0 rounded-control border border-gelo object-cover" />
+        )}
+        <div className="min-w-0">
+          <p className="font-display text-[14px] font-semibold leading-snug text-marinho">{checkout.bump.titulo}</p>
+          {checkout.bump.descricao && <p className="mt-1 text-[12px] leading-relaxed text-marinho-2">{checkout.bump.descricao}</p>}
+          <p className="mt-2 flex items-baseline gap-2">
+            {checkout.bump.precoCentavos < checkout.bump.precoOriginalCentavos && (
+              <span className="text-[12px] text-marinho-3 line-through">{dinheiro(checkout.bump.precoOriginalCentavos)}</span>
+            )}
+            <span className="font-display text-[15px] font-semibold text-dourado-escuro">+ {dinheiro(checkout.bump.precoCentavos)}</span>
+          </p>
+        </div>
+      </div>
+      {/* A caixa de seleção fica no rodapé do cartão, como um passo final da oferta. */}
+      <label className="flex cursor-pointer items-center gap-2.5 border-t-2 border-dourado/40 bg-dourado-claro/50 px-4 py-3 text-[13px] font-medium text-dourado-escuro">
+        <input type="checkbox" className="h-4 w-4 shrink-0 accent-azul" checked={bumpAceito} onChange={alternarBump} />
+        {bumpAceito ? (
+          <span className="flex items-center gap-1.5">
+            <IconeCheck tamanho={15} />
+            Produto adicionado
+          </span>
+        ) : (
+          "Adicionar produto"
+        )}
+      </label>
+    </div>
+  );
+
+  /* Nos demais modelos a oferta some ao ser aceita e vira uma linha do resumo. */
+  const blocoBump = cartaoUnico
+    ? checkout.bump && (
+        <section className={classeSecao}>
+          <h2 className="text-[15px] font-semibold text-marinho">Aproveite e leve junto</h2>
+          <div className="mt-3">{cartaoBump}</div>
+        </section>
+      )
+    : checkout.bump &&
+      (bumpAceito ? (
+        <div className="flex items-center justify-between gap-3 rounded-panel border border-verde/30 bg-verde-claro px-4 py-3 text-sm text-verde">
+          <span className="flex items-center gap-2">
+            <IconeCheck tamanho={16} />
+            {checkout.bump.nome} adicionado ao seu pedido por {dinheiro(checkout.bump.precoCentavos)}.
+          </span>
+          <button type="button" onClick={alternarBump} className="text-[13px] font-medium text-marinho-2 hover:underline">
+            Remover
+          </button>
+        </div>
+      ) : (
+        <label className="colchetes flex cursor-pointer gap-4 rounded-card border-2 border-dashed border-dourado bg-dourado-claro/40 p-4 transition-colors hover:bg-dourado-claro/70 @xl:p-5">
+          <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-azul" checked={false} onChange={alternarBump} aria-label={`Adicionar ${checkout.bump.nome}`} />
+          <div className="flex min-w-0 flex-1 gap-4">
+            {checkout.bump.imagem && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={checkout.bump.imagem} alt="" className="hidden h-16 w-16 shrink-0 rounded-panel border border-gelo object-cover @xl:block" />
+            )}
+            <div className="min-w-0">
+              <p className="font-display text-[15px] font-semibold text-marinho">{checkout.bump.titulo}</p>
+              {checkout.bump.descricao && <p className="mt-1 text-[13px] text-marinho-2">{checkout.bump.descricao}</p>}
+              <p className="mt-2 flex items-baseline gap-2">
+                {checkout.bump.precoCentavos < checkout.bump.precoOriginalCentavos && (
+                  <span className="text-[13px] text-marinho-3 line-through">{dinheiro(checkout.bump.precoOriginalCentavos)}</span>
                 )}
-                <div className="min-w-0">
-                  <p className="font-display text-[15px] font-semibold text-marinho">{checkout.bump.titulo}</p>
-                  {checkout.bump.descricao && <p className="mt-1 text-[13px] text-marinho-2">{checkout.bump.descricao}</p>}
-                  <p className="mt-2 flex items-baseline gap-2">
-                    {checkout.bump.precoCentavos < checkout.bump.precoOriginalCentavos && (
-                      <span className="text-[13px] text-marinho-3 line-through">{dinheiro(checkout.bump.precoOriginalCentavos)}</span>
-                    )}
-                    <span className="font-display text-lg font-semibold text-dourado-escuro">+ {dinheiro(checkout.bump.precoCentavos)}</span>
-                  </p>
-                </div>
-              </div>
-            </label>
-          ));
+                <span className="font-display text-lg font-semibold text-dourado-escuro">+ {dinheiro(checkout.bump.precoCentavos)}</span>
+              </p>
+            </div>
+          </div>
+        </label>
+      ));
 
   const blocos: Record<Bloco, ReactNode> = {
     dados: blocoDados,
     pagamento: blocoPagamento,
     bump: blocoBump,
-    garantia: aparencia.garantia.ativo ? <Garantia dias={aparencia.garantia.dias} texto={aparencia.garantia.texto} /> : null,
-    depoimentos: <Depoimentos itens={aparencia.depoimentos} />,
+    garantia: aparencia.garantia.ativo ? <Garantia dias={aparencia.garantia.dias} texto={aparencia.garantia.texto} plano={cartaoUnico} /> : null,
+    depoimentos: <Depoimentos itens={aparencia.depoimentos} plano={cartaoUnico} />,
   };
+
+  const avisoErro = erroGeral ? (
+    <div role="alert" className="rounded-panel border border-bordo/30 bg-bordo-claro px-4 py-3 text-[13px] text-bordo">
+      {erroGeral}
+    </div>
+  ) : null;
+
+  const botaoPagar = (
+    <Button type="submit" tamanho="lg" className="sobre-primaria w-full text-[16px]" carregando={enviando}>
+      {rotuloBotao}
+    </Button>
+  );
+
+  const notaSegura = (
+    <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-marinho-3">
+      <IconeCadeado tamanho={14} className="shrink-0 text-azul" />
+      Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
+    </p>
+  );
+
+  /* ── Modelo "cartão único" ────────────────────────────────────────────────
+     Uma moldura estreita com o produto no topo, as seções separadas por linha
+     e o resumo colado no botão, como nas páginas de venda de infoproduto.   */
+  if (cartaoUnico) {
+    const maior = opcoesParcelas[opcoesParcelas.length - 1];
+    const parcelado = noCartao && parcelaEscolhida.numero > 1;
+    const precoDestaque = parcelado ? `${parcelaEscolhida.numero}x de ${dinheiro(parcelaEscolhida.parcelaCentavos)}` : dinheiro(total);
+    const precoApoio = parcelado
+      ? `ou ${dinheiro(total)} à vista`
+      : checkout.metodos.includes("cartao") && maior.numero > 1
+        ? `ou em até ${maior.numero}x de ${dinheiro(maior.parcelaCentavos)}`
+        : null;
+
+    return (
+      <>
+        {aparencia.bannerUrl && <BannerCheckout url={aparencia.bannerUrl} />}
+        <div className="mx-auto w-full max-w-[520px]">
+          <CabecalhoOferta aparencia={aparencia} />
+          {aparencia.cronometro.ativo && (
+            <div className="mb-5">
+              <Cronometro minutos={aparencia.cronometro.minutos} texto={aparencia.cronometro.texto} chave={checkout.codigo} />
+            </div>
+          )}
+
+          <form
+            onSubmit={enviar}
+            className="divide-y divide-gelo overflow-hidden rounded-card border border-gelo bg-branco shadow-card"
+            noValidate
+            onFocusCapture={aoInteragir}
+          >
+            {/* Faixa do produto: foto, nome e o preço do jeito que será cobrado. */}
+            <div className="flex gap-4 px-5 py-5 @xl:px-6">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-panel border border-gelo bg-neve">
+                {checkout.produto.imagem ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={checkout.produto.imagem} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <IconeCheckout className="text-marinho-3" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-[15px] font-semibold leading-snug text-marinho">{checkout.produto.nome}</h1>
+                {checkout.produto.descricao && <p className="mt-0.5 line-clamp-2 text-[12px] text-marinho-2">{checkout.produto.descricao}</p>}
+                <p className="mt-1.5 font-display text-xl font-semibold text-marinho">{precoDestaque}</p>
+                {precoApoio && <p className="text-[12px] text-marinho-3">{precoApoio}</p>}
+              </div>
+            </div>
+
+            {/* A ordem dos blocos vem do editor e vale também para o teclado e o leitor de tela. */}
+            {aparencia.ordem.map((bloco) => (
+              <Fragment key={bloco}>{blocos[bloco]}</Fragment>
+            ))}
+
+            <div className="flex flex-col gap-4 px-5 py-5 @xl:px-6">
+              {avisoErro}
+              <section>
+                <h2 className="text-[13px] font-medium text-marinho-3">Detalhes da compra</h2>
+                <dl className="mt-2 flex flex-col gap-2 rounded-panel border border-gelo px-4 py-3 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <dt className="min-w-0 truncate text-marinho-2">{checkout.produto.nome}</dt>
+                    <dd className="shrink-0 text-marinho">{dinheiro(checkout.produto.precoCentavos)}</dd>
+                  </div>
+                  {bumpAceito && checkout.bump && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="flex min-w-0 items-baseline gap-2 text-marinho-2">
+                        <span className="truncate">{checkout.bump.nome}</span>
+                        <button type="button" onClick={alternarBump} className="shrink-0 text-[12px] text-marinho-3 underline hover:text-marinho">
+                          remover
+                        </button>
+                      </dt>
+                      <dd className="shrink-0 text-marinho">{dinheiro(checkout.bump.precoCentavos)}</dd>
+                    </div>
+                  )}
+                  {noCartao && parcelaEscolhida.comJuros && (
+                    <div className="flex justify-between gap-3 text-[12px] text-marinho-3">
+                      <dt>Juros do parcelamento</dt>
+                      <dd>{dinheiro(parcelaEscolhida.jurosCentavos)}</dd>
+                    </div>
+                  )}
+                  <div className="flex items-baseline justify-between gap-3 border-t border-gelo pt-2">
+                    <dt className="font-medium text-marinho">Total</dt>
+                    <dd className="font-display text-xl font-semibold text-marinho">{dinheiro(totalACobrar)}</dd>
+                  </div>
+                  {parcelado && (
+                    <div className="text-right text-[12px] text-marinho-3">
+                      {parcelaEscolhida.numero}x de {dinheiro(parcelaEscolhida.parcelaCentavos)}
+                      {parcelaEscolhida.comJuros ? "" : " sem juros"}
+                    </div>
+                  )}
+                </dl>
+              </section>
+              {botaoPagar}
+              <div className="flex flex-col items-center gap-2">
+                <span className="flex items-center gap-2 text-[12px] text-marinho-3">
+                  Pagamento processado por
+                  <SeloAsaas altura={14} />
+                </span>
+                {notaSegura}
+              </div>
+            </div>
+          </form>
+        </div>
+      </>
+    );
+  }
 
   // Cada modelo muda só onde o resumo fica e a largura da coluna; o conteúdo é o mesmo.
   const colunas =
@@ -470,6 +696,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
     classico: cn("grid grid-cols-1 gap-5 @5xl:items-start", colunas),
     compacto: "flex flex-col gap-5",
     focado: "mx-auto flex w-full max-w-[560px] flex-col gap-5",
+    unico: "",
   }[aparencia.modelo];
 
   return (
@@ -496,19 +723,10 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             <Fragment key={bloco}>{blocos[bloco]}</Fragment>
           ))}
 
-          {erroGeral && (
-            <div role="alert" className="rounded-panel border border-bordo/30 bg-bordo-claro px-4 py-3 text-[13px] text-bordo">
-              {erroGeral}
-            </div>
-          )}
+          {avisoErro}
 
-          <Button type="submit" tamanho="lg" className="sobre-primaria w-full text-[16px]" carregando={enviando}>
-            {rotuloBotao}
-          </Button>
-          <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-marinho-3">
-            <IconeCadeado tamanho={14} className="shrink-0 text-azul" />
-            Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
-          </p>
+          {botaoPagar}
+          {notaSegura}
         </form>
       </div>
     </>

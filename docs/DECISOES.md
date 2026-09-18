@@ -111,6 +111,21 @@ modo que o relatório de produto não fica contaminado pelos juros. A taxa é ar
 (`299` = 2,99% ao mês) para não usar ponto flutuante no banco. Links antigos ficam com taxa zero e não mudam de
 comportamento.
 
+## ADR-016 · Modelo "cartão único" como quarto layout, e não como redesenho — 2026-09-18
+
+**Decisão.** O formato de cartão estreito com pagamento em lista, order bump persistente e rodapé marinho entrou como
+um quarto valor de `modelo`, ao lado de clássico, compacto e focado. Nada mudou nos três existentes. A seleção de
+pagamento em abas e em lista convive no mesmo componente, compartilhando os campos de cada meio.
+
+**Por quê.** Já existem links publicados usando os outros modelos, e trocar o layout de todos por causa de uma
+referência seria mudar a página de venda de quem já está vendendo. Como modelo, a escolha é por link ou por padrão da
+loja, e dá para comparar conversão entre os dois formatos.
+
+**Consequências.** `checkout.tsx` ganhou um caminho de renderização próprio, com a moldura, a faixa do produto e o
+bloco de detalhes. Os blocos de garantia e depoimentos ganharam a variante `plano`, sem cartão próprio.
+`MolduraCheckout` ganhou `rodapeEscuro`. O contraponto é que o componente ficou maior; se um quinto modelo aparecer,
+vale quebrar em arquivos por modelo.
+
 ## Pendentes
 
 - Hospedagem de produção (Railway, já conectado ao ambiente) e domínio.

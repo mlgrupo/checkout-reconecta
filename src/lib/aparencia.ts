@@ -11,13 +11,17 @@ import { IDS_FONTES } from "@/lib/fontes";
 export type Depoimento = { nome: string; texto: string; nota: number };
 
 /** Modelos de página. Mudam onde o resumo fica e a largura da coluna. */
-export const MODELOS = ["classico", "compacto", "focado"] as const;
+export const MODELOS = ["classico", "compacto", "focado", "unico"] as const;
 export type Modelo = (typeof MODELOS)[number];
 
 export const MODELO_INFO: Record<Modelo, { rotulo: string; descricao: string }> = {
   classico: { rotulo: "Clássico", descricao: "Duas colunas no computador, resumo fixo à direita." },
   compacto: { rotulo: "Compacto", descricao: "Uma coluna, resumo no topo. Bom para tráfego de celular." },
   focado: { rotulo: "Focado", descricao: "Uma coluna estreita e centralizada, sem distração." },
+  unico: {
+    rotulo: "Cartão único",
+    descricao: "Tudo dentro de um cartão estreito: produto no topo, formas de pagamento que abrem uma de cada vez e o resumo junto do botão.",
+  },
 };
 
 /** Blocos que podem ser reordenados no editor. O botão de pagar fica sempre no fim. */

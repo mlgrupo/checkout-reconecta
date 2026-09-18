@@ -69,10 +69,11 @@ export function Cronometro({ minutos, texto, chave }: { minutos: number; texto: 
   );
 }
 
-export function Depoimentos({ itens }: { itens: Depoimento[] }) {
+/** `plano` tira a moldura própria: o bloco passa a viver dentro de um cartão maior. */
+export function Depoimentos({ itens, plano = false }: { itens: Depoimento[]; plano?: boolean }) {
   if (!itens.length) return null;
   return (
-    <section className="rounded-card border border-gelo bg-branco p-5 shadow-card">
+    <section className={plano ? "px-5 py-5 @xl:px-6" : "rounded-card border border-gelo bg-branco p-5 shadow-card"}>
       <h2 className="text-[15px] font-semibold">Quem já comprou</h2>
       <ul className="mt-4 flex flex-col gap-4">
         {itens.map((d, i) => (
@@ -87,9 +88,14 @@ export function Depoimentos({ itens }: { itens: Depoimento[] }) {
   );
 }
 
-export function Garantia({ dias, texto }: { dias: number; texto: string }) {
+export function Garantia({ dias, texto, plano = false }: { dias: number; texto: string; plano?: boolean }) {
   return (
-    <section className="flex items-start gap-3 rounded-card border border-gelo bg-branco p-5 shadow-card">
+    <section
+      className={cn(
+        "flex items-start gap-3",
+        plano ? "px-5 py-5 @xl:px-6" : "rounded-card border border-gelo bg-branco p-5 shadow-card",
+      )}
+    >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-verde-claro text-verde">
         <IconeEscudo tamanho={20} />
       </span>

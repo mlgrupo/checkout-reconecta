@@ -2,6 +2,22 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.10.0] — 2026-09-18
+
+### Adicionado
+
+- Modelo de checkout **Cartão único**: uma moldura estreita com a faixa do produto no topo, as seções separadas por linha e o resumo colado no botão. É o formato das páginas de venda de infoproduto.
+- Formas de pagamento em lista neste modelo: uma linha por meio, e o escolhido abre os campos ali mesmo, sem a página pular de lugar.
+- Order bump que continua na tela depois de aceito, com a caixa "Adicionar produto" no rodapé do cartão dourado, dá para desmarcar.
+- Bloco "Detalhes da compra" imediatamente acima do botão, com produto, order bump, juros e total.
+- Rodapé marinho na largura do cartão, com suporte, texto legal e o selo do Asaas.
+- Garantia e depoimentos ganharam uma variante sem moldura própria, para viverem dentro do cartão.
+
+### Mudado
+
+- A faixa do produto mostra o preço do jeito que será cobrado: escolhendo 6x, o destaque vira "6x de R$ 100,39" e abaixo aparece "ou R$ 544,00 à vista".
+- Os três modelos anteriores continuam iguais. O novo é uma escolha no editor, por link ou como padrão da loja.
+
 ## [0.9.0] — 2026-09-18
 
 ### Adicionado

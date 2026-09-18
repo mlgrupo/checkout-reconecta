@@ -31,7 +31,12 @@ export default async function PaginaCheckout({ params }: Props) {
     <>
       <Gtm id={gtmId} />
       <TemaCheckout aparencia={checkout.aparencia}>
-        <MolduraCheckout nomeLoja={config.nome_loja} emailSuporte={config.email_suporte} whatsappSuporte={config.whatsapp_suporte}>
+        <MolduraCheckout
+          nomeLoja={config.nome_loja}
+          emailSuporte={config.email_suporte}
+          whatsappSuporte={config.whatsapp_suporte}
+          rodapeEscuro={checkout.aparencia.modelo === "unico"}
+        >
           <Checkout checkout={checkout} />
         </MolduraCheckout>
       </TemaCheckout>
