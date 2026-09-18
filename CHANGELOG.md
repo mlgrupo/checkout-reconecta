@@ -6,7 +6,7 @@ Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a C
 
 ### Mudado
 
-- A marca da Reconecta passou a ser dourada. Os arquivos oficiais vieram em vermelho e foram recoloridos preservando os tons do emblema; o script ficou em .
+- A marca da Reconecta passou a ser dourada. Os arquivos oficiais vieram em vermelho e foram recoloridos preservando os tons do emblema; o script ficou em `docs/marca/dourar-a-marca.js`.
 - Selo do Asaas também no topo do checkout, ao lado de "Pagamento seguro", com o texto recolhido no celular. O rodapé ganhou a menção ao ambiente PCI DSS.
 - Favicon passou a ser o emblema dourado.
 
