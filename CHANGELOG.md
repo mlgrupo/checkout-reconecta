@@ -2,6 +2,23 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.5.0] — 2026-09-18
+
+### Adicionado
+
+- Modelos de checkout: clássico (duas colunas), compacto (uma coluna com resumo no topo) e focado (coluna estreita centralizada).
+- Fundo claro ou escuro, invertendo as superfícies e a tinta sem perder a cor principal.
+- Lado do resumo configurável no modelo clássico.
+- Ordem dos blocos editável (dados, pagamento, order bump, garantia, depoimentos). A numeração das etapas e a navegação por teclado seguem a ordem escolhida.
+- Bandeiras de cartão: selos das aceitas abaixo do seletor de método, destaque da bandeira detectada dentro do campo e validação de dígitos e CVV por bandeira.
+- Logo oficial da Reconecta e símbolo instalados em `public/brand/`.
+
+### Corrigido
+
+- **Celular:** os campos do checkout ainda usavam quebras por janela, então a prévia de celular mostrava o layout de computador espremido. Agora todo o checkout usa container queries.
+- No fundo escuro o texto do botão principal e a pílula do selo Asaas ficavam invisíveis, porque as utilitárias do Tailwind venciam as regras do tema. As duas regras saíram das camadas.
+- O método de pagamento selecionado ficava ilegível no fundo escuro.
+
 ## [0.4.0] — 2026-09-18
 
 ### Adicionado

@@ -14,6 +14,10 @@ não personalizados do link acompanham sozinhos.
 
 | Item | Efeito no checkout |
 |------|--------------------|
+| Modelo | **Clássico** (duas colunas, resumo fixo ao lado), **Compacto** (uma coluna, resumo no topo) ou **Focado** (coluna estreita centralizada). |
+| Lado do resumo | Só no clássico: resumo à direita ou à esquerda do formulário. |
+| Fundo | Claro ou escuro. O escuro inverte as superfícies e a tinta, mantendo a cor principal. |
+| Ordem dos blocos | Seus dados, pagamento, order bump, garantia e depoimentos em qualquer ordem. A numeração das etapas e a navegação por teclado seguem a ordem escolhida. |
 | Cor principal | Botões, passos numerados, método selecionado, links e foco. As variações de hover e fundo saem dela. |
 | Banner | Imagem larga acima de tudo. |
 | Título e subtítulo | Chamada antes do formulário. Em branco, o checkout começa direto nos campos. |
@@ -34,12 +38,29 @@ fundo suave e cor de texto legível são calculadas em HSL a partir da cor princ
 Quando a cor escolhida é clara demais para texto branco, o botão principal passa a usar o navy do sistema,
 mantendo o contraste mínimo de 4,5 para 1.
 
+No fundo escuro os papéis se invertem: o tom "claro" da cor vira um tingimento escuro e o tom "profundo",
+usado como texto sobre esse tingimento, fica claro. É o que mantém legível o método de pagamento selecionado.
+
+Duas regras ficam fora das camadas do Tailwind de propósito, em `globals.css`: a cor do texto sobre a cor
+principal e o fundo da pílula do selo Asaas. Regras sem camada vencem as utilitárias, que é o necessário para
+sobrescrever `text-branco` e `bg-marinho` quando o tema inverte os tokens.
+
+## Bandeiras de cartão
+
+As bandeiras aceitas aparecem abaixo do seletor de método e a detectada é destacada dentro do campo do número,
+conforme a pessoa digita. A detecção usa as faixas de BIN em `src/lib/bandeiras.ts`, com Elo e Hipercard testados
+antes de Visa, Mastercard e Discover, porque suas faixas se sobrepõem. A bandeira também define quantos dígitos o
+número deve ter e se o CVV tem 3 ou 4 casas. Os arquivos ficam em `public/brand/bandeiras/`.
+
 ## A prévia
 
-A prévia renderiza o **componente real** do checkout, não uma imitação. Para isso, o layout do checkout usa
-container queries em vez de quebras por janela: ele responde à largura do bloco onde está. A prévia então desenha
-o checkout na largura de verdade (1180 px no modo computador, 390 px no celular) e reduz visualmente para caber
-na coluna. O que você vê é o que o cliente vê.
+A prévia renderiza o **componente real** do checkout, não uma imitação. Para isso, **todo** o checkout usa
+container queries em vez de quebras por janela: ele responde à largura do bloco onde está, não à da janela do
+navegador. A prévia então desenha o checkout na largura de verdade (1180 px no modo computador, 390 px no
+celular) e reduz visualmente para caber na coluna. O que você vê é o que o cliente vê.
+
+Isso vale para os campos também. Antes, só a grade principal respondia ao contêiner, e a prévia de celular
+mostrava os campos do cartão lado a lado, espremidos, porque as classes `sm:` ainda olhavam para a janela.
 
 No modo prévia nada é enviado: sem pedido, sem chamada ao Asaas e sem evento no GTM.
 

@@ -168,9 +168,9 @@
     animation: var(--animate-ring-orbit);
   }
 
-  /* Texto sobre a cor principal do checkout: branco ou navy, conforme o contraste. */
-  .tema-checkout .sobre-primaria {
-    color: var(--cor-sobre-primaria, var(--color-branco));
+  /* No fundo escuro a sombra precisa ser mais densa para o cartão se destacar. */
+  .tema-escuro {
+    color-scheme: dark;
   }
 
   /* Barra de rolagem discreta */
@@ -178,6 +178,25 @@
     scrollbar-width: thin;
     scrollbar-color: var(--color-gelo) transparent;
   }
+}
+
+/* Fora de qualquer @layer de propósito: regras sem camada vencem as utilitárias do
+   Tailwind, que é o que precisamos para sobrescrever `text-branco` e `bg-marinho`
+   quando o checkout roda com cor própria ou fundo escuro. */
+
+/* Texto sobre a cor principal: branco ou navy, conforme o contraste da cor escolhida. */
+.tema-checkout .sobre-primaria {
+  color: var(--cor-sobre-primaria, #ffffff);
+}
+
+/* O selo do Asaas é a versão negativa (branca), então a pílula fica escura sempre,
+   mesmo quando o tema inverte o token de tinta. */
+.selo-asaas {
+  background-color: #0a1633;
+}
+
+.tema-escuro .shadow-card {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -90,16 +90,45 @@ export function corDeTextoSobre(fundo: string) {
  * Os nomes espelham os tokens do design system, então o tema é aplicado só
  * sobrescrevendo as variáveis CSS num contêiner.
  */
-export function escalaDaCor(corPrincipal: string) {
+/**
+ * Fundo escuro: inverte os tokens de superfície e de tinta do design system.
+ * Os componentes continuam usando `bg-branco`, `text-marinho` e afins sem saber do tema.
+ */
+export const TOKENS_ESCUROS: Record<string, string> = {
+  "--color-neve": "#0d1017",
+  "--color-branco": "#171b24",
+  "--color-gelo": "#2b323f",
+  "--color-gelo-2": "#1f2531",
+  "--color-marinho": "#f1f4fa",
+  "--color-marinho-2": "#b3bcce",
+  "--color-marinho-3": "#7b8699",
+  "--color-dourado-claro": "#3a2e12",
+  "--color-dourado-escuro": "#e4c260",
+  "--color-verde-claro": "#12291f",
+  "--color-bordo-claro": "#2e1219",
+  "--color-ambar-claro": "#2f2410",
+};
+
+export function escalaDaCor(corPrincipal: string, fundo: "claro" | "escuro" = "claro") {
   const base = normalizarHex(corPrincipal) ?? "#0b3dff";
   const { h, s, l } = hexParaHsl(base);
   const saturada = Math.max(s, 25);
+
+  // No fundo escuro os papéis se invertem: o "claro" vira um tingimento escuro e o
+  // "profundo", usado como texto sobre esse tingimento, precisa ficar claro.
+  const tingimento =
+    fundo === "escuro"
+      ? hslParaHex({ h, s: Math.min(saturada, 60), l: 18 })
+      : hslParaHex({ h, s: Math.min(saturada, 70), l: Math.min(94, l + 42) });
+  const textoSobreTingimento =
+    fundo === "escuro" ? hslParaHex({ h, s: Math.min(saturada, 80), l: 78 }) : hslParaHex({ h, s: saturada, l: Math.max(8, l - 22) });
+
   return {
     "--color-azul": base,
-    "--color-azul-escuro": hslParaHex({ h, s: saturada, l: Math.max(12, l - 12) }),
-    "--color-azul-profundo": hslParaHex({ h, s: saturada, l: Math.max(8, l - 22) }),
+    "--color-azul-escuro": hslParaHex({ h, s: saturada, l: fundo === "escuro" ? Math.min(88, l + 10) : Math.max(12, l - 12) }),
+    "--color-azul-profundo": textoSobreTingimento,
     "--color-azul-medio": hslParaHex({ h, s: saturada, l: Math.min(78, l + 22) }),
-    "--color-azul-claro": hslParaHex({ h, s: Math.min(saturada, 70), l: Math.min(94, l + 42) }),
+    "--color-azul-claro": tingimento,
     "--cor-sobre-primaria": corDeTextoSobre(base),
   } as Record<string, string>;
 }

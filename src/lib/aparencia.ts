@@ -9,7 +9,39 @@ import { ehHexValido } from "@/lib/cores";
 
 export type Depoimento = { nome: string; texto: string; nota: number };
 
+/** Modelos de página. Mudam onde o resumo fica e a largura da coluna. */
+export const MODELOS = ["classico", "compacto", "focado"] as const;
+export type Modelo = (typeof MODELOS)[number];
+
+export const MODELO_INFO: Record<Modelo, { rotulo: string; descricao: string }> = {
+  classico: { rotulo: "Clássico", descricao: "Duas colunas no computador, resumo fixo à direita." },
+  compacto: { rotulo: "Compacto", descricao: "Uma coluna, resumo no topo. Bom para tráfego de celular." },
+  focado: { rotulo: "Focado", descricao: "Uma coluna estreita e centralizada, sem distração." },
+};
+
+/** Blocos que podem ser reordenados no editor. O botão de pagar fica sempre no fim. */
+export const BLOCOS = ["dados", "pagamento", "bump", "garantia", "depoimentos"] as const;
+export type Bloco = (typeof BLOCOS)[number];
+
+export const BLOCO_INFO: Record<Bloco, { rotulo: string; descricao: string }> = {
+  dados: { rotulo: "Seus dados", descricao: "Nome, e-mail, celular e documento." },
+  pagamento: { rotulo: "Pagamento", descricao: "Escolha do método e campos do cartão." },
+  bump: { rotulo: "Order bump", descricao: "Oferta extra, quando o link tiver uma." },
+  garantia: { rotulo: "Garantia", descricao: "Selo com o prazo de devolução." },
+  depoimentos: { rotulo: "Depoimentos", descricao: "Provas sociais de quem já comprou." },
+};
+
+export const FUNDOS = ["claro", "escuro"] as const;
+export type Fundo = (typeof FUNDOS)[number];
+
+export const LADOS = ["direita", "esquerda"] as const;
+export type LadoResumo = (typeof LADOS)[number];
+
 export type Aparencia = {
+  modelo: Modelo;
+  fundo: Fundo;
+  ladoResumo: LadoResumo;
+  ordem: Bloco[];
   corPrincipal: string;
   bannerUrl: string | null;
   titulo: string | null;
@@ -23,6 +55,10 @@ export type Aparencia = {
 export type AparenciaParcial = Partial<Aparencia>;
 
 export const APARENCIA_PADRAO: Aparencia = {
+  modelo: "classico",
+  fundo: "claro",
+  ladoResumo: "direita",
+  ordem: [...BLOCOS],
   corPrincipal: "#0b3dff",
   bannerUrl: null,
   titulo: null,
@@ -75,6 +111,14 @@ const textoOpcional = (max: number) =>
     .optional();
 
 export const schemaAparencia = z.object({
+  modelo: z.enum(MODELOS).optional(),
+  fundo: z.enum(FUNDOS).optional(),
+  ladoResumo: z.enum(LADOS).optional(),
+  ordem: z
+    .array(z.enum(BLOCOS))
+    .optional()
+    // Completa o que faltar e remove repetidos, para nunca sumir um bloco por engano.
+    .transform((v) => (v ? ([...new Set(v), ...BLOCOS.filter((b) => !v.includes(b))] as Bloco[]) : undefined)),
   corPrincipal: z.string().refine(ehHexValido, "Use uma cor em hexadecimal, como #0B3DFF.").optional(),
   bannerUrl: z
     .string()

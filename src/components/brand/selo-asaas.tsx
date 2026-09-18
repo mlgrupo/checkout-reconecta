@@ -11,7 +11,7 @@ export function SeloAsaas({ altura = 28, className }: { altura?: number; classNa
   // Proporção do SVG oficial: 188 x 69.
   return (
     <span
-      className={cn("inline-flex shrink-0 items-center rounded-chip bg-marinho", className)}
+      className={cn("selo-asaas inline-flex shrink-0 items-center rounded-chip", className)}
       style={{ height: altura + 12, paddingInline: Math.round(altura * 0.45) }}
       title="Serviços financeiros Asaas"
     >

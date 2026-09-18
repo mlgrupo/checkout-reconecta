@@ -8,9 +8,20 @@ import { TemaCheckout } from "@/components/checkout/tema";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Campo, Entrada, Interruptor } from "@/components/ui/field";
-import { IconeAtualizar, IconeFechar, IconeMais, IconeUpload } from "@/components/ui/icons";
+import { IconeAtualizar, IconeFechar, IconeMais, IconeSeta, IconeUpload } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
-import { APARENCIA_PADRAO, type Aparencia, type Depoimento } from "@/lib/aparencia";
+import {
+  APARENCIA_PADRAO,
+  BLOCO_INFO,
+  FUNDOS,
+  LADOS,
+  MODELO_INFO,
+  MODELOS,
+  type Aparencia,
+  type Depoimento,
+  type LadoResumo,
+  type Modelo,
+} from "@/lib/aparencia";
 import { ehHexValido, normalizarHex } from "@/lib/cores";
 import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import type { CheckoutPublico } from "@/lib/links";
@@ -67,6 +78,54 @@ function EntradaCor({ valor, onChange }: { valor: string; onChange: (v: string) 
         ))}
       </div>
     </div>
+  );
+}
+
+/** Move um item da lista sem alterar o array original. */
+function mover<T>(lista: T[], de: number, passo: number): T[] {
+  const para = de + passo;
+  if (para < 0 || para >= lista.length) return lista;
+  const copia = [...lista];
+  [copia[de], copia[para]] = [copia[para], copia[de]];
+  return copia;
+}
+
+/** Miniatura do modelo: retângulos representando resumo e formulário. */
+function DiagramaModelo({ modelo, lado }: { modelo: Modelo; lado: LadoResumo }) {
+  const resumo = <span className="rounded-[2px] bg-current opacity-40" />;
+  const form = <span className="rounded-[2px] bg-current opacity-80" />;
+  if (modelo === "classico") {
+    return (
+      <span className="grid h-8 w-12 gap-1" style={{ gridTemplateColumns: lado === "direita" ? "1fr 8px" : "8px 1fr" }}>
+        {lado === "direita" ? (
+          <>
+            {form}
+            {resumo}
+          </>
+        ) : (
+          <>
+            {resumo}
+            {form}
+          </>
+        )}
+      </span>
+    );
+  }
+  if (modelo === "compacto") {
+    return (
+      <span className="grid h-8 w-12 grid-rows-[8px_1fr] gap-1">
+        {resumo}
+        {form}
+      </span>
+    );
+  }
+  return (
+    <span className="flex h-8 w-12 justify-center">
+      <span className="grid w-7 grid-rows-[8px_1fr] gap-1">
+        {resumo}
+        {form}
+      </span>
+    </span>
   );
 }
 
@@ -145,6 +204,104 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
 
   const painel = (
     <div className="rolagem-fina flex flex-col rounded-card border border-gelo bg-branco shadow-card lg:max-h-[calc(100dvh-180px)] lg:overflow-y-auto">
+      <Secao titulo="Modelo" descricao="Onde o resumo fica e a largura da página.">
+        <div className="grid grid-cols-3 gap-2">
+          {MODELOS.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => mudar("modelo", m)}
+              title={MODELO_INFO[m].descricao}
+              className={cn(
+                "flex flex-col items-center gap-2 rounded-panel border px-2 py-3 transition-colors",
+                a.modelo === m ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
+              )}
+            >
+              <DiagramaModelo modelo={m} lado={a.ladoResumo} />
+              <span className="text-[12px] font-medium">{MODELO_INFO[m].rotulo}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-[12px] text-marinho-3">{MODELO_INFO[a.modelo].descricao}</p>
+
+        {a.modelo === "classico" && (
+          <Campo rotulo="Lado do resumo">
+            <div className="grid grid-cols-2 gap-2">
+              {LADOS.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => mudar("ladoResumo", l)}
+                  className={cn(
+                    "rounded-control border px-3 py-2 text-sm font-medium capitalize transition-colors",
+                    a.ladoResumo === l ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
+                  )}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </Campo>
+        )}
+
+        <Campo rotulo="Fundo da página">
+          <div className="grid grid-cols-2 gap-2">
+            {FUNDOS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => mudar("fundo", f)}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-control border px-3 py-2 text-sm font-medium capitalize transition-colors",
+                  a.fundo === f ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
+                )}
+              >
+                <span
+                  className={cn("h-4 w-4 rounded-[4px] border", f === "escuro" ? "border-marinho bg-marinho" : "border-gelo bg-branco")}
+                />
+                {f}
+              </button>
+            ))}
+          </div>
+        </Campo>
+      </Secao>
+
+      <Secao titulo="Ordem dos blocos" descricao="Vale também para a navegação por teclado. O botão de pagar fica sempre no fim.">
+        <ul className="flex flex-col gap-2">
+          {a.ordem.map((bloco, i) => (
+            <li key={bloco} className="flex items-center gap-2 rounded-panel border border-gelo px-3 py-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-chip bg-gelo-2 font-display text-[11px] font-semibold text-marinho-2">
+                {i + 1}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-medium text-marinho">{BLOCO_INFO[bloco].rotulo}</span>
+                <span className="block truncate text-[12px] text-marinho-3">{BLOCO_INFO[bloco].descricao}</span>
+              </span>
+              <span className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  aria-label={`Mover ${BLOCO_INFO[bloco].rotulo} para cima`}
+                  disabled={i === 0}
+                  onClick={() => mudar("ordem", mover(a.ordem, i, -1))}
+                  className="rounded-control p-1 text-marinho-2 hover:bg-gelo-2 disabled:opacity-30"
+                >
+                  <IconeSeta tamanho={15} className="-rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Mover ${BLOCO_INFO[bloco].rotulo} para baixo`}
+                  disabled={i === a.ordem.length - 1}
+                  onClick={() => mudar("ordem", mover(a.ordem, i, 1))}
+                  className="rounded-control p-1 text-marinho-2 hover:bg-gelo-2 disabled:opacity-30"
+                >
+                  <IconeSeta tamanho={15} className="rotate-90" />
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Secao>
+
       <Secao titulo="Cor" descricao="Usada nos botões, nos destaques e no método de pagamento selecionado.">
         <Campo rotulo="Cor principal" erro={erros.corPrincipal}>
           <EntradaCor valor={a.corPrincipal} onChange={(v) => mudar("corPrincipal", v)} />

@@ -113,7 +113,7 @@ export function CabecalhoOferta({ aparencia }: { aparencia: Aparencia }) {
   if (!aparencia.titulo && !aparencia.subtitulo) return null;
   return (
     <header className="mb-5">
-      {aparencia.titulo && <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{aparencia.titulo}</h1>}
+      {aparencia.titulo && <h1 className="text-2xl font-semibold leading-tight @xl:text-3xl">{aparencia.titulo}</h1>}
       {aparencia.subtitulo && <p className="mt-1.5 text-[15px] text-marinho-2">{aparencia.subtitulo}</p>}
     </header>
   );

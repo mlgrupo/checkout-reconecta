@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { BandeiraDetectada, BandeirasAceitas } from "@/components/checkout/bandeiras";
 import { BannerCheckout, CabecalhoOferta, Cronometro, Depoimentos, Garantia } from "@/components/checkout/blocos";
 import { Button } from "@/components/ui/button";
 import { Campo, Entrada, Selecao } from "@/components/ui/field";
 import { IconeBoleto, IconeCadeado, IconeCheck, IconeCheckout, IconePix } from "@/components/ui/icons";
+import type { Bloco } from "@/lib/aparencia";
+import { cvvEsperado, detectarBandeira, digitosEsperados } from "@/lib/bandeiras";
 import { METODO_INFO, type Metodo } from "@/lib/dominio";
 import {
   dinheiro,
@@ -107,13 +110,20 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clienteValido]);
 
+  const bandeira = detectarBandeira(cartao.numero);
+  const cvvNecessario = cvvEsperado(cartao.numero);
+
   const errosCartao: Partial<Record<keyof Cartao, string>> =
     metodo === "cartao"
       ? {
-          numero: !validarNumeroCartao(cartao.numero) ? "Número de cartão inválido." : undefined,
+          numero: !validarNumeroCartao(cartao.numero)
+            ? "Número de cartão inválido."
+            : !digitosEsperados(cartao.numero).includes(somenteDigitos(cartao.numero).length)
+              ? `Número incompleto para ${bandeira?.nome ?? "esta bandeira"}.`
+              : undefined,
           nome: cartao.nome.trim().length < 3 ? "Nome como está no cartão." : undefined,
           validade: validadeCartao(cartao.validade) ? undefined : "Validade inválida.",
-          cvv: /^\d{3,4}$/.test(cartao.cvv) ? undefined : "CVV inválido.",
+          cvv: new RegExp(`^\\d{${cvvNecessario}}$`).test(cartao.cvv) ? undefined : `CVV de ${cvvNecessario} dígitos.`,
           cep: somenteDigitos(cartao.cep).length === 8 ? undefined : "CEP inválido.",
           numeroEndereco: cartao.numeroEndereco.trim() ? undefined : "Informe o número.",
         }
@@ -179,19 +189,20 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
     metodo === "pix" ? `Pagar ${dinheiro(total)} com Pix` : metodo === "cartao" ? `Pagar ${dinheiro(total)} no cartão` : `Gerar boleto de ${dinheiro(total)}`;
   const rotuloBotao = aparencia.textoBotao?.trim() || rotuloPadrao;
 
-  return (
-    <>
-      {aparencia.bannerUrl && <BannerCheckout url={aparencia.bannerUrl} />}
-      <CabecalhoOferta aparencia={aparencia} />
-      {aparencia.cronometro.ativo && (
-        <div className="mb-5">
-          <Cronometro minutos={aparencia.cronometro.minutos} texto={aparencia.cronometro.texto} chave={checkout.codigo} />
-        </div>
-      )}
+  // Numeração das etapas segue a ordem escolhida no editor, não a ordem do código.
+  const numerados: Bloco[] = aparencia.ordem.filter((b) => b === "dados" || b === "pagamento");
+  const numeroDe = (bloco: Bloco) => numerados.indexOf(bloco) + 1;
 
-      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_380px] @4xl:items-start">
-      {/* Resumo (à direita no desktop, no topo no celular) */}
-      <aside className="@4xl:sticky @4xl:top-6 @4xl:order-2">
+  // Resumo do pedido. No modelo clássico ele fica fixo ao lado; nos outros, no topo.
+  const resumoAoLado = aparencia.modelo === "classico";
+  const resumo = (
+      <aside
+        className={
+          resumoAoLado
+            ? cn("@5xl:sticky @5xl:top-6", aparencia.ladoResumo === "direita" ? "@5xl:order-2" : "@5xl:order-1")
+            : undefined
+        }
+      >
         <div className="colchetes rounded-card border border-gelo bg-branco p-5 shadow-card">
           <div className="flex gap-4">
             <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-panel border border-gelo bg-neve">
@@ -235,16 +246,18 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
           </dl>
         </div>
       </aside>
+  );
 
-      {/* Formulário */}
-      <form onSubmit={enviar} className="flex flex-col gap-5 @4xl:order-1" noValidate onFocusCapture={aoInteragir}>
-        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
+  const blocoDados = (
+        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
           <h2 className="flex items-center gap-3 text-[15px] font-semibold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">1</span>
+            <span className="sobre-primaria flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">
+              {numeroDe("dados")}
+            </span>
             Seus dados
           </h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Campo rotulo="Nome completo" htmlFor="nome" erro={erro("nome", errosCliente.nome)} className="sm:col-span-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 @xl:grid-cols-2">
+            <Campo rotulo="Nome completo" htmlFor="nome" erro={erro("nome", errosCliente.nome)} className="@xl:col-span-2">
               <Entrada id="nome" autoComplete="name" value={cliente.nome} onChange={(e) => setCliente({ ...cliente, nome: e.target.value })} onBlur={() => tocar("nome")} aria-invalid={Boolean(erro("nome", errosCliente.nome))} />
             </Campo>
             <Campo rotulo="E-mail" htmlFor="email" erro={erro("email", errosCliente.email)} dica="Enviamos a confirmação e o acesso para este e-mail.">
@@ -253,15 +266,19 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             <Campo rotulo="Celular" htmlFor="telefone" erro={erro("telefone", errosCliente.telefone)}>
               <Entrada id="telefone" type="tel" inputMode="tel" autoComplete="tel-national" value={cliente.telefone} onChange={(e) => setCliente({ ...cliente, telefone: mascararTelefone(e.target.value) })} onBlur={() => tocar("telefone")} placeholder="(11) 99999-9999" aria-invalid={Boolean(erro("telefone", errosCliente.telefone))} />
             </Campo>
-            <Campo rotulo="CPF ou CNPJ" htmlFor="cpf" erro={erro("cpfCnpj", errosCliente.cpfCnpj)} className="sm:col-span-2">
+            <Campo rotulo="CPF ou CNPJ" htmlFor="cpf" erro={erro("cpfCnpj", errosCliente.cpfCnpj)} className="@xl:col-span-2">
               <Entrada id="cpf" inputMode="numeric" value={cliente.cpfCnpj} onChange={(e) => setCliente({ ...cliente, cpfCnpj: mascararCpfCnpj(e.target.value) })} onBlur={() => tocar("cpfCnpj")} placeholder="000.000.000-00" aria-invalid={Boolean(erro("cpfCnpj", errosCliente.cpfCnpj))} />
             </Campo>
           </div>
         </section>
+  );
 
-        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
+  const blocoPagamento = (
+        <section className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
           <h2 className="flex items-center gap-3 text-[15px] font-semibold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">2</span>
+            <span className="sobre-primaria flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">
+              {numeroDe("pagamento")}
+            </span>
             Pagamento
           </h2>
           <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${metodosDisponiveis.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label="Forma de pagamento">
@@ -287,6 +304,13 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             })}
           </div>
 
+          {metodosDisponiveis.includes("cartao") && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-[12px] text-marinho-3">Aceitamos</span>
+              <BandeirasAceitas ativa={metodo === "cartao" ? (bandeira?.id ?? null) : null} />
+            </div>
+          )}
+
           {metodo === "pix" && (
             <p className="mt-4 rounded-panel border border-gelo bg-neve px-4 py-3 text-[13px] text-marinho-2">
               Ao continuar, você recebe um QR Code e um código copia e cola. A confirmação é automática, em segundos.
@@ -298,18 +322,31 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             </p>
           )}
           {metodo === "cartao" && (
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Campo rotulo="Número do cartão" htmlFor="c-numero" erro={erro("numero", errosCartao.numero)} className="sm:col-span-2">
-                <Entrada id="c-numero" inputMode="numeric" autoComplete="cc-number" value={cartao.numero} onChange={(e) => setCartao({ ...cartao, numero: mascararCartao(e.target.value) })} onBlur={() => tocar("numero")} placeholder="0000 0000 0000 0000" aria-invalid={Boolean(erro("numero", errosCartao.numero))} />
+            <div className="mt-4 grid grid-cols-1 gap-4 @xl:grid-cols-2">
+              <Campo rotulo="Número do cartão" htmlFor="c-numero" erro={erro("numero", errosCartao.numero)} className="@xl:col-span-2">
+                <div className="relative">
+                  <Entrada
+                    id="c-numero"
+                    inputMode="numeric"
+                    autoComplete="cc-number"
+                    value={cartao.numero}
+                    onChange={(e) => setCartao({ ...cartao, numero: mascararCartao(e.target.value) })}
+                    onBlur={() => tocar("numero")}
+                    placeholder="0000 0000 0000 0000"
+                    aria-invalid={Boolean(erro("numero", errosCartao.numero))}
+                    className={bandeira ? "pr-14" : undefined}
+                  />
+                  <BandeiraDetectada bandeira={bandeira} />
+                </div>
               </Campo>
-              <Campo rotulo="Nome impresso no cartão" htmlFor="c-nome" erro={erro("nomeCartao", errosCartao.nome)} className="sm:col-span-2">
+              <Campo rotulo="Nome impresso no cartão" htmlFor="c-nome" erro={erro("nomeCartao", errosCartao.nome)} className="@xl:col-span-2">
                 <Entrada id="c-nome" autoComplete="cc-name" value={cartao.nome} onChange={(e) => setCartao({ ...cartao, nome: e.target.value.toUpperCase() })} onBlur={() => tocar("nomeCartao")} aria-invalid={Boolean(erro("nomeCartao", errosCartao.nome))} />
               </Campo>
               <Campo rotulo="Validade" htmlFor="c-validade" erro={erro("validade", errosCartao.validade)}>
                 <Entrada id="c-validade" inputMode="numeric" autoComplete="cc-exp" value={cartao.validade} onChange={(e) => setCartao({ ...cartao, validade: mascararValidade(e.target.value) })} onBlur={() => tocar("validade")} placeholder="MM/AA" aria-invalid={Boolean(erro("validade", errosCartao.validade))} />
               </Campo>
               <Campo rotulo="CVV" htmlFor="c-cvv" erro={erro("cvv", errosCartao.cvv)}>
-                <Entrada id="c-cvv" inputMode="numeric" autoComplete="cc-csc" value={cartao.cvv} onChange={(e) => setCartao({ ...cartao, cvv: somenteDigitos(e.target.value).slice(0, 4) })} onBlur={() => tocar("cvv")} placeholder="123" aria-invalid={Boolean(erro("cvv", errosCartao.cvv))} />
+                <Entrada id="c-cvv" inputMode="numeric" autoComplete="cc-csc" value={cartao.cvv} onChange={(e) => setCartao({ ...cartao, cvv: somenteDigitos(e.target.value).slice(0, cvvNecessario) })} onBlur={() => tocar("cvv")} placeholder={cvvNecessario === 4 ? "1234" : "123"} aria-invalid={Boolean(erro("cvv", errosCartao.cvv))} />
               </Campo>
               <Campo rotulo="CEP do titular" htmlFor="c-cep" erro={erro("cep", errosCartao.cep)}>
                 <Entrada id="c-cep" inputMode="numeric" autoComplete="postal-code" value={cartao.cep} onChange={(e) => setCartao({ ...cartao, cep: mascararCep(e.target.value) })} onBlur={() => tocar("cep")} placeholder="00000-000" aria-invalid={Boolean(erro("cep", errosCartao.cep))} />
@@ -323,7 +360,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                 </Campo>
               </div>
               {checkout.parcelasMax > 1 && (
-                <Campo rotulo="Parcelas" htmlFor="c-parcelas" className="sm:col-span-2">
+                <Campo rotulo="Parcelas" htmlFor="c-parcelas" className="@xl:col-span-2">
                   <Selecao id="c-parcelas" value={parcelas} onChange={(e) => setParcelas(Number(e.target.value))}>
                     {Array.from({ length: checkout.parcelasMax }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
@@ -336,9 +373,11 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             </div>
           )}
         </section>
+  );
 
-        {/* Order bump: some ao ser aceito e vira item do resumo */}
-        {checkout.bump &&
+  /* Order bump: some ao ser aceito e vira item do resumo */
+  const blocoBump =
+        checkout.bump &&
           (bumpAceito ? (
             <div className="flex items-center justify-between gap-3 rounded-panel border border-verde/30 bg-verde-claro px-4 py-3 text-sm text-verde">
               <span className="flex items-center gap-2">
@@ -350,12 +389,12 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
               </button>
             </div>
           ) : (
-            <label className="colchetes flex cursor-pointer gap-4 rounded-card border-2 border-dashed border-dourado bg-dourado-claro/40 p-4 transition-colors hover:bg-dourado-claro/70 sm:p-5">
+            <label className="colchetes flex cursor-pointer gap-4 rounded-card border-2 border-dashed border-dourado bg-dourado-claro/40 p-4 transition-colors hover:bg-dourado-claro/70 @xl:p-5">
               <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-azul" checked={false} onChange={alternarBump} aria-label={`Adicionar ${checkout.bump.nome}`} />
               <div className="flex min-w-0 flex-1 gap-4">
                 {checkout.bump.imagem && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={checkout.bump.imagem} alt="" className="hidden h-16 w-16 shrink-0 rounded-panel border border-gelo object-cover sm:block" />
+                  <img src={checkout.bump.imagem} alt="" className="hidden h-16 w-16 shrink-0 rounded-panel border border-gelo object-cover @xl:block" />
                 )}
                 <div className="min-w-0">
                   <p className="font-display text-[15px] font-semibold text-marinho">{checkout.bump.titulo}</p>
@@ -369,25 +408,65 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                 </div>
               </div>
             </label>
+          ));
+
+  const blocos: Record<Bloco, ReactNode> = {
+    dados: blocoDados,
+    pagamento: blocoPagamento,
+    bump: blocoBump,
+    garantia: aparencia.garantia.ativo ? <Garantia dias={aparencia.garantia.dias} texto={aparencia.garantia.texto} /> : null,
+    depoimentos: <Depoimentos itens={aparencia.depoimentos} />,
+  };
+
+  // Cada modelo muda só onde o resumo fica e a largura da coluna; o conteúdo é o mesmo.
+  const colunas =
+    aparencia.ladoResumo === "direita"
+      ? "@5xl:grid-cols-[minmax(0,1fr)_380px]"
+      : "@5xl:grid-cols-[380px_minmax(0,1fr)]";
+  const layout = {
+    classico: cn("grid grid-cols-1 gap-5 @5xl:items-start", colunas),
+    compacto: "flex flex-col gap-5",
+    focado: "mx-auto flex w-full max-w-[560px] flex-col gap-5",
+  }[aparencia.modelo];
+
+  return (
+    <>
+      {aparencia.bannerUrl && <BannerCheckout url={aparencia.bannerUrl} />}
+      <CabecalhoOferta aparencia={aparencia} />
+      {aparencia.cronometro.ativo && (
+        <div className={cn("mb-5", aparencia.modelo === "focado" && "mx-auto w-full max-w-[560px]")}>
+          <Cronometro minutos={aparencia.cronometro.minutos} texto={aparencia.cronometro.texto} chave={checkout.codigo} />
+        </div>
+      )}
+
+      <div className={layout}>
+        {resumo}
+
+        <form
+          onSubmit={enviar}
+          className={cn("flex flex-col gap-5", resumoAoLado && (aparencia.ladoResumo === "direita" ? "@5xl:order-1" : "@5xl:order-2"))}
+          noValidate
+          onFocusCapture={aoInteragir}
+        >
+          {/* A ordem dos blocos vem do editor e vale também para o teclado e o leitor de tela. */}
+          {aparencia.ordem.map((bloco) => (
+            <Fragment key={bloco}>{blocos[bloco]}</Fragment>
           ))}
 
-        {erroGeral && (
-          <div role="alert" className="rounded-panel border border-bordo/30 bg-bordo-claro px-4 py-3 text-[13px] text-bordo">
-            {erroGeral}
-          </div>
-        )}
+          {erroGeral && (
+            <div role="alert" className="rounded-panel border border-bordo/30 bg-bordo-claro px-4 py-3 text-[13px] text-bordo">
+              {erroGeral}
+            </div>
+          )}
 
-        <Button type="submit" tamanho="lg" className="sobre-primaria w-full text-[16px]" carregando={enviando}>
-          {rotuloBotao}
-        </Button>
-        <p className="flex items-center justify-center gap-1.5 text-[12px] text-marinho-3">
-          <IconeCadeado tamanho={14} className="text-azul" />
-          Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
-        </p>
-
-        {aparencia.garantia.ativo && <Garantia dias={aparencia.garantia.dias} texto={aparencia.garantia.texto} />}
-        <Depoimentos itens={aparencia.depoimentos} />
-      </form>
+          <Button type="submit" tamanho="lg" className="sobre-primaria w-full text-[16px]" carregando={enviando}>
+            {rotuloBotao}
+          </Button>
+          <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-marinho-3">
+            <IconeCadeado tamanho={14} className="shrink-0 text-azul" />
+            Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
+          </p>
+        </form>
       </div>
     </>
   );

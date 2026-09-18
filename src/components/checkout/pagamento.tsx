@@ -115,7 +115,7 @@ export function Pagamento({ inicial, codigo }: Props) {
   // ── Pago ────────────────────────────────────────────────────
   if (pedido.status === "pago") {
     return (
-      <div className="mx-auto max-w-lg animate-rise rounded-card border border-gelo bg-branco p-6 text-center shadow-card sm:p-8">
+      <div className="mx-auto max-w-lg animate-rise rounded-card border border-gelo bg-branco p-6 text-center shadow-card @xl:p-8">
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-chip bg-dourado-claro text-dourado-escuro ring-4 ring-dourado/30">
           <IconeCheck tamanho={30} />
         </span>
@@ -153,7 +153,7 @@ export function Pagamento({ inicial, codigo }: Props) {
     };
     const t = textos[pedido.status];
     return (
-      <div className="mx-auto max-w-lg rounded-card border border-gelo bg-branco p-6 text-center shadow-card sm:p-8">
+      <div className="mx-auto max-w-lg rounded-card border border-gelo bg-branco p-6 text-center shadow-card @xl:p-8">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-chip bg-neve text-marinho-2">
           {pedido.status === "em_analise" ? <Spinner tamanho={24} /> : <IconeRelogio tamanho={26} />}
         </span>
@@ -183,8 +183,8 @@ export function Pagamento({ inicial, codigo }: Props) {
             ? `Válido por ${Math.floor(restante / 3_600_000)}h ${String(Math.floor((restante % 3_600_000) / 60_000)).padStart(2, "0")}min`
             : `Válido por ${String(Math.floor(restante / 60_000)).padStart(2, "0")}:${String(Math.floor((restante % 60_000) / 1000)).padStart(2, "0")}`;
     return (
-      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_360px] @4xl:items-start">
-        <div className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
+      <div className="grid grid-cols-1 gap-5 @5xl:grid-cols-[minmax(0,1fr)_360px] @5xl:items-start">
+        <div className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
           <div className="flex items-center gap-2 text-[13px] font-medium text-ambar">
             <Spinner tamanho={16} />
             Aguardando pagamento
@@ -192,7 +192,7 @@ export function Pagamento({ inicial, codigo }: Props) {
           <h1 className="mt-2 text-2xl font-semibold">Pague com Pix</h1>
           <p className="mt-1 text-[15px] text-marinho-2">Escaneie o QR Code ou copie o código. Assim que o banco confirmar, esta página atualiza sozinha.</p>
 
-          <div className="mt-5 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <div className="mt-5 flex flex-col items-center gap-4 @xl:flex-row @xl:items-start">
             <div className="colchetes rounded-panel border border-gelo bg-branco p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`data:image/png;base64,${pedido.pix.imagemBase64}`} alt="QR Code Pix" width={220} height={220} className="h-[220px] w-[220px]" />
@@ -214,7 +214,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             </div>
           </div>
 
-          <ol className="mt-6 grid grid-cols-1 gap-3 border-t border-gelo pt-5 text-[13px] text-marinho-2 sm:grid-cols-3">
+          <ol className="mt-6 grid grid-cols-1 gap-3 border-t border-gelo pt-5 text-[13px] text-marinho-2 @xl:grid-cols-3">
             {["Abra o app do seu banco e escolha pagar com Pix.", "Escaneie o QR Code ou cole o código copiado.", "Confirme o valor e finalize. A confirmação é imediata."].map((passo, i) => (
               <li key={i} className="flex gap-2.5">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-chip border border-gelo font-display text-[11px] font-semibold text-marinho-3">{i + 1}</span>
@@ -223,7 +223,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             ))}
           </ol>
         </div>
-        <aside className="@4xl:sticky @4xl:top-6">
+        <aside className="@5xl:sticky @5xl:top-6">
           {resumo}
           <p className="mt-3 text-center text-[12px] text-marinho-3">Pedido #{pedido.numero} · {pedido.clienteEmail}</p>
         </aside>
@@ -234,8 +234,8 @@ export function Pagamento({ inicial, codigo }: Props) {
   // ── Aguardando: Boleto ──────────────────────────────────────
   if (pedido.metodo === "boleto" && pedido.boleto) {
     return (
-      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_360px] @4xl:items-start">
-        <div className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
+      <div className="grid grid-cols-1 gap-5 @5xl:grid-cols-[minmax(0,1fr)_360px] @5xl:items-start">
+        <div className="rounded-card border border-gelo bg-branco p-5 shadow-card @xl:p-6">
           <div className="flex items-center gap-2 text-[13px] font-medium text-ambar">
             <Spinner tamanho={16} />
             Aguardando pagamento
@@ -248,7 +248,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             Linha digitável
           </label>
           <textarea id="linha" readOnly value={pedido.boleto.linhaDigitavel} rows={2} className="mt-1.5 w-full resize-none rounded-control border border-gelo bg-neve px-3 py-2 font-mono text-[13px] text-marinho-2" onFocus={(e) => e.currentTarget.select()} />
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-3 flex flex-col gap-2 @xl:flex-row">
             <Button tamanho="lg" icone={copiado ? <IconeCheck tamanho={18} /> : <IconeCopiar tamanho={18} />} onClick={() => copiar(pedido.boleto!.linhaDigitavel)} className="flex-1">
               {copiado ? "Copiada" : "Copiar linha digitável"}
             </Button>
@@ -259,7 +259,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             )}
           </div>
         </div>
-        <aside className="@4xl:sticky @4xl:top-6">
+        <aside className="@5xl:sticky @5xl:top-6">
           {resumo}
           <p className="mt-3 text-center text-[12px] text-marinho-3">Pedido #{pedido.numero} · {pedido.clienteEmail}</p>
         </aside>
@@ -269,7 +269,7 @@ export function Pagamento({ inicial, codigo }: Props) {
 
   // ── Aguardando: cartão (pendente sem análise) ou dados ausentes ──
   return (
-    <div className="mx-auto max-w-lg rounded-card border border-gelo bg-branco p-6 text-center shadow-card sm:p-8">
+    <div className="mx-auto max-w-lg rounded-card border border-gelo bg-branco p-6 text-center shadow-card @xl:p-8">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-chip bg-neve text-azul">
         <Spinner tamanho={24} />
       </span>
