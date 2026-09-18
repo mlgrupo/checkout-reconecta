@@ -83,7 +83,7 @@ export function DetalhePedido({ pedidoId, podeSimular, onFechar, onMudou }: Prop
       onFechar={onFechar}
       largura="lg"
       titulo={p ? `Pedido #${p.numero}` : "Pedido"}
-      descricao={p ? `${dataBr(p.criadoEm)} · ${METODO_ROTULO[p.metodo]}${p.parcelas > 1 ? ` em ${p.parcelas}x` : ""}` : undefined}
+      descricao={p ? `${dataBr(p.criadoEm)} · ${METODO_ROTULO[p.metodo]}${p.parcelas > 1 ? ` em ${p.parcelas}x${p.jurosCentavos > 0 ? " com juros" : " sem juros"}` : ""}` : undefined}
       rodape={
         p ? (
           <>
@@ -111,7 +111,14 @@ export function DetalhePedido({ pedidoId, podeSimular, onFechar, onMudou }: Prop
             <Selo tom={STATUS_UI[p.status].tom} ponto className="text-[13px]">
               {STATUS_UI[p.status].rotulo}
             </Selo>
-            <span className="font-display text-2xl font-semibold text-marinho">{dinheiro(p.valorTotalCentavos)}</span>
+            <div className="text-right">
+              <span className="font-display text-2xl font-semibold text-marinho">{dinheiro(p.valorTotalCentavos + p.jurosCentavos)}</span>
+              {p.jurosCentavos > 0 && (
+                <p className="text-[12px] text-marinho-3">
+                  {dinheiro(p.valorTotalCentavos)} em produtos e {dinheiro(p.jurosCentavos)} de juros do parcelamento
+                </p>
+              )}
+            </div>
           </div>
 
           <section>

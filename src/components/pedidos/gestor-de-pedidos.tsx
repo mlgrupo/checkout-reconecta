@@ -137,7 +137,7 @@ export function GestorDePedidos({ podeSimular }: { podeSimular: boolean }) {
                       {METODO_ROTULO[p.metodo]}
                       {p.metodo === "cartao" && p.parcelas > 1 ? ` ${p.parcelas}x` : ""}
                     </td>
-                    <td className="px-4 py-3 text-right font-display font-semibold text-marinho">{dinheiro(p.valorTotalCentavos)}</td>
+                    <td className="px-4 py-3 text-right font-display font-semibold text-marinho">{dinheiro(p.valorTotalCentavos + p.jurosCentavos)}</td>
                     <td className="px-4 py-3">
                       <Selo tom={STATUS_UI[p.status].tom} ponto>
                         {STATUS_UI[p.status].rotulo}

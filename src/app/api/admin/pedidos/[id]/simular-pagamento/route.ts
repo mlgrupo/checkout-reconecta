@@ -32,7 +32,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     if (prontidao.asaasPagadorSandbox && pedido.metodo === "pix" && pedido.pixPayload) {
       const pagamento = await pagarQrCodeComoPagador({
         payload: pedido.pixPayload,
-        value: pedido.valorTotalCentavos / 100,
+        value: (pedido.valorTotalCentavos + pedido.jurosCentavos) / 100,
         description: `Teste sandbox · pedido #${pedido.numero}`,
       });
       await registrarEvento(pedido.id, "sandbox:pagador", `QR Code pago pela conta pagadora do sandbox (${pagamento.id}, ${pagamento.status}).`, {

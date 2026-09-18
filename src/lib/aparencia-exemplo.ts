@@ -17,7 +17,7 @@ export async function checkoutDeExemplo(aparencia: Aparencia): Promise<CheckoutP
   return {
     codigo: "previa",
     metodos: ["pix", "cartao", "boleto"],
-    parcelasMax: 6,
+    parcelamento: { parcelasMax: 6, parcelasSemJuros: 3, jurosMensalBps: 299 },
     urlSucesso: null,
     aparencia,
     produto: produto

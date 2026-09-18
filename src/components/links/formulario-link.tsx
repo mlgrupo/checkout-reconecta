@@ -12,6 +12,7 @@ import { IconeLixeira } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import { METODOS, type Metodo } from "@/lib/dominio";
 import { dinheiro } from "@/lib/formato";
+import { opcoesDeParcelamento, taxaParaBps } from "@/lib/parcelas";
 import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,8 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
   const [bumpDescricao, setBumpDescricao] = useState(link?.bumpDescricao ?? "");
   const [metodos, setMetodos] = useState<Metodo[]>(link?.metodos ?? ["pix", "cartao", "boleto"]);
   const [parcelasMax, setParcelasMax] = useState(link?.parcelasMax ?? 1);
+  const [parcelasSemJuros, setParcelasSemJuros] = useState(link?.parcelasSemJuros ?? 12);
+  const [jurosTexto, setJurosTexto] = useState(((link?.jurosMensalBps ?? 0) / 100).toFixed(2).replace(".", ","));
   const [urlSucesso, setUrlSucesso] = useState(link?.urlSucesso ?? "");
   const [ativo, setAtivo] = useState(link?.ativo ?? true);
   const [erros, setErros] = useState<Record<string, string>>({});
@@ -46,11 +49,23 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
   const produtoPrincipal = produtos.find((p) => p.id === produtoId);
   const produtoBump = produtos.find((p) => p.id === bumpProdutoId);
 
+  // Taxa digitada: null significa fora do intervalo aceito (0 a 20% ao mês).
+  const jurosMensalBps = taxaParaBps(jurosTexto);
+  const semJurosEfetivo = Math.min(parcelasSemJuros, parcelasMax);
+  const tudoSemJuros = (jurosMensalBps ?? 0) === 0 || semJurosEfetivo >= parcelasMax;
+  // Simulação com o maior valor possível do link: produto principal mais o order bump.
+  const valorSimulado = (produtoPrincipal?.precoCentavos ?? 0) + (bumpProdutoId ? (bumpPreco ?? produtoBump?.precoCentavos ?? 0) : 0);
+  const simulacao = valorSimulado > 0 ? opcoesDeParcelamento(valorSimulado, { parcelasMax, parcelasSemJuros: semJurosEfetivo, jurosMensalBps: jurosMensalBps ?? 0 }) : [];
+
   function alternarMetodo(m: Metodo) {
     setMetodos((atual) => (atual.includes(m) ? atual.filter((x) => x !== m) : [...atual, m]));
   }
 
   async function salvar() {
+    if (metodos.includes("cartao") && jurosMensalBps === null) {
+      setErros({ jurosMensalBps: "Informe uma taxa entre 0 e 20% ao mês." });
+      return;
+    }
     setSalvando(true);
     setErros({});
     try {
@@ -64,6 +79,8 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
         bumpDescricao: bumpProdutoId ? bumpDescricao || null : null,
         metodos,
         parcelasMax: metodos.includes("cartao") ? parcelasMax : 1,
+        parcelasSemJuros: metodos.includes("cartao") ? semJurosEfetivo : 1,
+        jurosMensalBps: metodos.includes("cartao") ? (jurosMensalBps ?? 0) : 0,
         urlSucesso: urlSucesso || null,
         ativo,
       };
@@ -224,18 +241,81 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
           </fieldset>
 
           {metodos.includes("cartao") && (
-            <Campo rotulo="Parcelamento máximo no cartão" htmlFor="l-parcelas" erro={erros.parcelasMax} dica="As taxas de parcelamento seguem a configuração da sua conta Asaas.">
-              <Escolha
-                id="l-parcelas"
-                valor={parcelasMax}
-                onChange={setParcelasMax}
-                opcoes={Array.from({ length: 12 }, (_, i) => i + 1).map((n) => ({
-                  valor: n,
-                  rotulo: n === 1 ? "À vista" : `Até ${n}x`,
-                  descricao: n > 1 && produtoPrincipal ? `${dinheiro(Math.ceil(produtoPrincipal.precoCentavos / n))} por parcela` : undefined,
-                }))}
-              />
-            </Campo>
+            <div className="flex flex-col gap-4 rounded-panel border border-gelo bg-neve/60 p-4">
+              <Campo rotulo="Parcelamento máximo no cartão" htmlFor="l-parcelas" erro={erros.parcelasMax}>
+                <Escolha
+                  id="l-parcelas"
+                  valor={parcelasMax}
+                  onChange={(n) => {
+                    setParcelasMax(n);
+                    if (parcelasSemJuros > n) setParcelasSemJuros(n);
+                  }}
+                  opcoes={Array.from({ length: 12 }, (_, i) => i + 1).map((n) => ({
+                    valor: n,
+                    rotulo: n === 1 ? "À vista" : `Até ${n}x`,
+                    descricao: n > 1 && valorSimulado > 0 ? `${dinheiro(Math.ceil(valorSimulado / n))} por parcela sem juros` : undefined,
+                  }))}
+                />
+              </Campo>
+
+              {parcelasMax > 1 && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Campo rotulo="Parcelas sem juros" htmlFor="l-sem-juros" dica="Acima disso, a taxa abaixo entra na conta.">
+                    <Escolha
+                      id="l-sem-juros"
+                      valor={semJurosEfetivo}
+                      onChange={setParcelasSemJuros}
+                      opcoes={Array.from({ length: parcelasMax }, (_, i) => i + 1).map((n) => ({
+                        valor: n,
+                        rotulo: n === 1 ? "Só à vista" : `Até ${n}x`,
+                        descricao: n >= parcelasMax ? "Tudo sem juros para o comprador" : undefined,
+                      }))}
+                    />
+                  </Campo>
+                  <Campo
+                    rotulo="Juros ao mês"
+                    htmlFor="l-juros"
+                    erro={erros.jurosMensalBps ?? (jurosMensalBps === null ? "Use um número entre 0 e 20." : undefined)}
+                    dica="Tabela Price, como no mercado. Zero mantém tudo sem juros."
+                  >
+                    <div className="flex items-center gap-2">
+                      <Entrada
+                        id="l-juros"
+                        inputMode="decimal"
+                        value={jurosTexto}
+                        onChange={(e) => setJurosTexto(e.target.value)}
+                        placeholder="2,99"
+                        aria-invalid={jurosMensalBps === null}
+                        className="max-w-28"
+                      />
+                      <span className="text-sm text-marinho-2">% ao mês</span>
+                    </div>
+                  </Campo>
+                </div>
+              )}
+
+              {simulacao.length > 1 && (
+                <div>
+                  <p className="text-[13px] font-medium text-marinho">
+                    O comprador vai ver{tudoSemJuros ? " (tudo sem juros)" : ""}
+                  </p>
+                  <ul className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 text-[13px] text-marinho-2 sm:grid-cols-2">
+                    {simulacao.map((p) => (
+                      <li key={p.numero} className="flex justify-between gap-3 border-b border-gelo/70 py-1 last:border-0">
+                        <span>
+                          {p.numero === 1 ? "À vista" : `${p.numero}x de ${dinheiro(p.parcelaCentavos)}`}
+                          {p.numero > 1 && !p.comJuros && <span className="ml-1 text-verde">sem juros</span>}
+                        </span>
+                        <span className={p.comJuros ? "text-bordo" : "text-marinho"}>{dinheiro(p.totalCentavos)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-[12px] text-marinho-3">
+                    Simulação com {dinheiro(valorSimulado)}{bumpProdutoId ? " (produto mais order bump)" : ""}. As taxas que o Asaas cobra de você seguem o contrato da sua conta.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           <Campo rotulo="Redirecionar após o pagamento" htmlFor="l-sucesso" opcional erro={erros.urlSucesso} dica="Página de obrigado ou área de membros. Em branco mostra a confirmação padrão.">

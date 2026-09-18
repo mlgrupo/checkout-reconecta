@@ -21,6 +21,8 @@ export const schemaLink = z.object({
   bumpDescricao: z.string().trim().max(500).optional().nullable(),
   metodos: z.array(z.enum(METODOS)).min(1, "Escolha pelo menos um meio de pagamento."),
   parcelasMax: z.number().int().min(1).max(12),
+  parcelasSemJuros: z.number().int().min(1).max(12).optional(),
+  jurosMensalBps: z.number().int().min(0, "A taxa não pode ser negativa.").max(2000, "Taxa acima do limite de 20% ao mês.").optional(),
   urlSucesso: z.union([z.literal(""), z.string().trim().url("Informe uma URL válida.")]).optional().nullable(),
   ativo: z.boolean().optional(),
   codigo: z.union([z.literal(""), z.string().trim().toLowerCase()]).optional().nullable(),

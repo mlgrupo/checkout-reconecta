@@ -5,6 +5,7 @@ import { pedidoItens, pedidos, type Metodo, type Pedido, type PedidoItem } from 
 import { asaas, ErroAsaas, type NovaCobranca } from "@/lib/asaas";
 import { adicionarDias, dataIso, somenteDigitos } from "@/lib/formato";
 import { obterCheckoutPublico } from "@/lib/links";
+import { calcularParcela } from "@/lib/parcelas";
 import { ErroDominio } from "@/lib/produtos";
 import { aplicarCobranca, registrarEvento } from "@/lib/pedidos/status";
 
@@ -54,7 +55,7 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
   if (!checkout.metodos.includes(dados.metodo)) {
     throw new ErroDominio("Este meio de pagamento não está disponível para este produto.", 400, { metodo: "Escolha outro meio." });
   }
-  const parcelas = dados.metodo === "cartao" ? Math.max(1, Math.min(dados.parcelas ?? 1, checkout.parcelasMax)) : 1;
+  const parcelas = dados.metodo === "cartao" ? Math.max(1, Math.min(dados.parcelas ?? 1, checkout.parcelamento.parcelasMax)) : 1;
   if (dados.metodo === "cartao" && !dados.cartao) {
     throw new ErroDominio("Informe os dados do cartão.", 400, { cartao: "Dados do cartão obrigatórios." });
   }
@@ -69,6 +70,12 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
   const total = itens.reduce((s, i) => s + i.precoCentavos * i.quantidade, 0);
   if (total < 100) throw new ErroDominio("O valor mínimo de uma cobrança é R$ 1,00.");
 
+  // O servidor recalcula o parcelamento: o que o navegador mandou não define preço.
+  const parcela = calcularParcela(total, parcelas, checkout.parcelamento);
+  const jurosCentavos = dados.metodo === "cartao" ? parcela.jurosCentavos : 0;
+  /** O que o comprador paga. Igual ao total quando não há juros. */
+  const totalCobrado = total + jurosCentavos;
+
   const db = await obterDb();
   const [linkLinha] = await db.query.linksCheckout.findMany({ where: (t, { eq }) => eq(t.codigo, checkout.codigo), limit: 1 });
 
@@ -81,6 +88,7 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
       status: "aguardando",
       metodo: dados.metodo,
       valorTotalCentavos: total,
+      jurosCentavos,
       bumpAceito,
       clienteNome: dados.cliente.nome.trim(),
       clienteEmail: dados.cliente.email.trim().toLowerCase(),
@@ -98,6 +106,9 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
     .returning();
   await registrarEvento(pedido.id, "criado", `Pedido criado via ${dados.metodo}${bumpAceito ? " com order bump" : ""}.`, {
     total,
+    juros: jurosCentavos,
+    totalCobrado,
+    parcelas,
     itens: itens.map((i) => i.nome),
   });
 
@@ -117,7 +128,7 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
     const cobrancaBase: NovaCobranca = {
       customer: cliente.id,
       billingType: BILLING[dados.metodo],
-      value: total / 100,
+      value: totalCobrado / 100,
       dueDate: dataIso(dados.metodo === "boleto" ? adicionarDias(hoje, DIAS_VENCIMENTO_BOLETO) : hoje),
       description: `Pedido #${pedido.numero}: ${descricao}`,
       externalReference: pedido.id,
@@ -143,8 +154,9 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
         mobilePhone: somenteDigitos(dados.cliente.telefone),
       };
       if (parcelas > 1) {
+        // O Asaas divide o totalValue entre as parcelas e distribui os centavos que sobram.
         cobrancaBase.installmentCount = parcelas;
-        cobrancaBase.totalValue = total / 100;
+        cobrancaBase.totalValue = parcela.totalCentavos / 100;
         delete (cobrancaBase as Partial<NovaCobranca>).value;
       }
     }

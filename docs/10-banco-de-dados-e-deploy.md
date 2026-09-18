@@ -26,8 +26,8 @@ As migrações em `drizzle/` são aplicadas automaticamente quando o servidor so
 |--------|----------|
 | `produtos` | Nome, slug, descrição, preço em centavos, imagem (id ou URL), ativo. |
 | `imagens` | Imagens de produto (bytea) servidas por `/api/imagens/{id}`. Limite 2 MB. |
-| `links_checkout` | Código público, produto, order bump (produto, preço, textos), meios, parcelas, URL de sucesso. |
-| `pedidos` | Cliente, método, total, status, ids e URLs do Asaas, Pix/boleto/cartão, UTM, IP. `numero` é sequencial. |
+| `links_checkout` | Código público, produto, order bump (produto, preço, textos), meios, parcelamento (máximo, sem juros, taxa mensal), URL de sucesso. |
+| `pedidos` | Cliente, método, total dos itens, juros do parcelamento, status, ids e URLs do Asaas, Pix/boleto/cartão, UTM, IP. `numero` é sequencial. |
 | `pedido_itens` | Itens do pedido (`principal` / `order_bump`) com preço no momento da compra. |
 | `eventos_pedido` | Linha do tempo: criação, cobrança, webhooks, mudanças de status. |
 | `eventos_webhook` | Todo webhook recebido, chave = id do evento (idempotência), erro se houver. |

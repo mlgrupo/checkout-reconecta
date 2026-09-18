@@ -29,6 +29,9 @@ export function Pagamento({ inicial, codigo }: Props) {
   const [agora, setAgora] = useState(() => Date.now());
   const statusAnterior = useRef(inicial.status);
 
+  // O GA4 mede o que o comprador pagou, então os juros do parcelamento entram no valor.
+  const valorCobrado = pedido.valorTotalCentavos + pedido.jurosCentavos;
+
   const itens: ItemGtm[] = pedido.itens.map((i, idx) => ({
     item_id: `${pedido.id}-${idx}`,
     item_name: i.nome,
@@ -39,7 +42,7 @@ export function Pagamento({ inicial, codigo }: Props) {
 
   // Eventos de geração do pagamento (uma vez por pedido, mesmo com recarregamento).
   useEffect(() => {
-    const ecommerce = { currency: "BRL" as const, value: reais(pedido.valorTotalCentavos), items: itens, payment_type: pedido.metodo };
+    const ecommerce = { currency: "BRL" as const, value: reais(valorCobrado), items: itens, payment_type: pedido.metodo };
     if (marcarUmaVez(`gtm:gerado:${pedido.id}`)) {
       enviarEvento(pedido.metodo === "pix" ? "pix_gerado" : pedido.metodo === "boleto" ? "boleto_gerado" : "cartao_enviado", ecommerce, { pedido: pedido.numero });
       if (!pedido.final) enviarEvento("aguardando_pagamento", ecommerce, { pedido: pedido.numero });
@@ -49,9 +52,14 @@ export function Pagamento({ inicial, codigo }: Props) {
 
   // Eventos de resultado, quando o status muda (ou já nasce final).
   useEffect(() => {
-    const ecommerce = { currency: "BRL" as const, value: reais(pedido.valorTotalCentavos), items: itens, payment_type: pedido.metodo, transaction_id: String(pedido.numero) };
+    const ecommerce = { currency: "BRL" as const, value: reais(valorCobrado), items: itens, payment_type: pedido.metodo, transaction_id: String(pedido.numero) };
     if (pedido.status === "pago" && marcarUmaVez(`gtm:purchase:${pedido.id}`)) {
-      enviarEvento("purchase", ecommerce, { pedido: pedido.numero, bump: pedido.itens.some((i) => i.tipo === "order_bump") });
+      enviarEvento("purchase", ecommerce, {
+        pedido: pedido.numero,
+        bump: pedido.itens.some((i) => i.tipo === "order_bump"),
+        parcelas: pedido.parcelas,
+        juros: reais(pedido.jurosCentavos),
+      });
     } else if (pedido.status === "expirado" && marcarUmaVez(`gtm:expirado:${pedido.id}`)) {
       enviarEvento("pagamento_expirado", ecommerce);
     } else if (pedido.status === "recusado" && statusAnterior.current !== "recusado" && marcarUmaVez(`gtm:recusado:${pedido.id}`)) {
@@ -104,11 +112,22 @@ export function Pagamento({ inicial, codigo }: Props) {
           <dd className="text-marinho">{dinheiro(i.precoCentavos)}</dd>
         </div>
       ))}
+      {pedido.jurosCentavos > 0 && (
+        <div className="flex justify-between gap-3 text-[13px] text-marinho-3">
+          <dt>Juros do parcelamento</dt>
+          <dd>{dinheiro(pedido.jurosCentavos)}</dd>
+        </div>
+      )}
       <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-gelo pt-2">
         <dt className="font-medium text-marinho">Total</dt>
-        <dd className="font-display text-xl font-semibold text-marinho">{dinheiro(pedido.valorTotalCentavos)}</dd>
+        <dd className="font-display text-xl font-semibold text-marinho">{dinheiro(pedido.valorTotalCentavos + pedido.jurosCentavos)}</dd>
       </div>
-      {pedido.metodo === "cartao" && pedido.parcelas > 1 && <p className="text-right text-[12px] text-marinho-3">{pedido.parcelas}x no cartão</p>}
+      {pedido.metodo === "cartao" && pedido.parcelas > 1 && (
+        <p className="text-right text-[12px] text-marinho-3">
+          {pedido.parcelas}x de {dinheiro(Math.ceil((pedido.valorTotalCentavos + pedido.jurosCentavos) / pedido.parcelas))} no cartão
+          {pedido.jurosCentavos > 0 ? "" : " sem juros"}
+        </p>
+      )}
     </dl>
   );
 

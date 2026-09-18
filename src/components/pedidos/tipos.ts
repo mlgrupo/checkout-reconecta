@@ -6,6 +6,7 @@ export type PedidoLista = {
   status: StatusPedido;
   metodo: Metodo;
   valorTotalCentavos: number;
+  jurosCentavos: number;
   bumpAceito: boolean;
   parcelas: number;
   clienteNome: string;

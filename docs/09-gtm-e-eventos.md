@@ -21,16 +21,20 @@ Todos os eventos levam `plataforma: "checkout-reconecta"`. Os que têm objeto `e
 | `remove_from_cart` | Cliente removeu o order bump | ecommerce só com o bump |
 | `generate_lead` | Nome, e-mail, CPF/CNPJ e celular ficaram válidos (uma vez) | ecommerce, `email_informado: true` |
 | `checkout_dados_completos` | Junto com `generate_lead` | `metodo` selecionado |
-| `add_payment_info` | Clique em pagar com o formulário válido | ecommerce, `payment_type`, `parcelas` |
+| `add_payment_info` | Clique em pagar com o formulário válido | ecommerce, `payment_type`, `parcelas`, `juros`, `valor_cobrado` |
 | `pix_gerado` | Página do pedido abriu com um Pix | ecommerce, `pedido` |
 | `boleto_gerado` | Página do pedido abriu com um boleto | ecommerce, `pedido` |
 | `cartao_enviado` | Página do pedido abriu após envio de cartão | ecommerce, `pedido` |
 | `aguardando_pagamento` | Junto com os três acima, se ainda não pago | ecommerce, `pedido` |
-| `purchase` | Pedido confirmado como pago (webhook ou consulta) | ecommerce com `transaction_id` = nº do pedido, `bump: true/false` |
+| `purchase` | Pedido confirmado como pago (webhook ou consulta) | ecommerce com `transaction_id` = nº do pedido, `bump: true/false`, `parcelas`, `juros` |
 | `pagamento_recusado` | Cartão recusado (no checkout ou pelo antifraude) | `metodo`, `motivo` |
 | `pagamento_expirado` | Pix/boleto venceu sem pagamento | ecommerce |
 
 `items[]` traz `item_id`, `item_name`, `price` (reais), `quantity` e `item_category` (`principal` ou `order_bump`).
+
+O `value` do ecommerce é **o que o comprador paga**. Num cartão parcelado com juros ele é maior que a soma dos itens, e a
+diferença aparece em `juros`. Em `add_payment_info` o `value` ainda é o preço à vista, porque a compra não aconteceu;
+`valor_cobrado` mostra o total da opção escolhida.
 
 ### Garantias
 

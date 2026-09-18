@@ -2,6 +2,21 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.9.0] — 2026-09-18
+
+### Adicionado
+
+- Parcelamento com juros no cartão. Cada link define o máximo de parcelas, até quantas são sem juros e a taxa mensal; acima do limite o cálculo é pela Tabela Price, como no resto do mercado.
+- O checkout mostra cada opção com o valor da parcela, a marca "sem juros" quando é o caso e o total com juros, e o resumo passa a abrir a linha dos juros. O botão cobra o valor certo.
+- O formulário do link simula na hora o que o comprador vai ver, da primeira à última parcela, usando o produto mais o order bump.
+- Pedido guarda a venda e os juros em campos separados (`valor_total_centavos` e `juros_centavos`), então o relatório de produto não mistura um com o outro.
+
+### Mudado
+
+- O servidor recalcula o parcelamento a partir da configuração do link. O navegador só informa o número de parcelas, e valores adulterados no cliente não viram preço.
+- Ao Asaas vai `totalValue` já com juros, e ele distribui os centavos que sobram entre as parcelas.
+- Painel, lista de pedidos e o evento `purchase` passaram a mostrar o total cobrado. O detalhe do pedido abre a conta entre produtos e juros.
+
 ## [0.8.1] — 2026-09-18
 
 ### Corrigido

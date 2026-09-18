@@ -73,6 +73,10 @@ export const linksCheckout = pgTable(
     bumpDescricao: text("bump_descricao"),
     metodos: jsonb("metodos").$type<Metodo[]>().default(["pix", "boleto", "cartao"]).notNull(),
     parcelasMax: integer("parcelas_max").default(1).notNull(),
+    /** Até quantas parcelas sem juros. Igual a parcelasMax significa tudo sem juros. */
+    parcelasSemJuros: integer("parcelas_sem_juros").default(12).notNull(),
+    /** Taxa mensal em centésimos de por cento: 299 é 2,99% ao mês. */
+    jurosMensalBps: integer("juros_mensal_bps").default(0).notNull(),
     urlSucesso: text("url_sucesso"),
     /** Só os campos que diferem do padrão da loja. Ver src/lib/aparencia.ts. */
     aparencia: jsonb("aparencia").$type<AparenciaParcial>(),
@@ -92,7 +96,10 @@ export const pedidos = pgTable(
     produtoId: uuid("produto_id").references(() => produtos.id, { onDelete: "set null" }),
     status: text("status").$type<StatusPedido>().default("aguardando").notNull(),
     metodo: text("metodo").$type<Metodo>().notNull(),
+    /** Soma dos itens, sem juros. O que entra de fato é este valor mais `jurosCentavos`. */
     valorTotalCentavos: integer("valor_total_centavos").notNull(),
+    /** Juros do parcelamento repassados ao comprador. Zero quando não há. */
+    jurosCentavos: integer("juros_centavos").default(0).notNull(),
     bumpAceito: boolean("bump_aceito").default(false).notNull(),
 
     clienteNome: text("cliente_nome").notNull(),

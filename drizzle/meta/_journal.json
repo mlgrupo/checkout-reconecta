@@ -22,6 +22,13 @@
       "when": 1789764397991,
       "tag": "0002_usuarios-locais",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789765676784,
+      "tag": "0003_juros-parcelamento",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,8 @@ export type LinkLista = {
   bumpDescricao: string | null;
   metodos: Metodo[];
   parcelasMax: number;
+  parcelasSemJuros: number;
+  jurosMensalBps: number;
   urlSucesso: string | null;
   aparencia: AparenciaParcial | null;
   ativo: boolean;

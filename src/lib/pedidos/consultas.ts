@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, desc, eq, gte, ilike, or, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { obterDb } from "@/db";
 import { eventosPedido, linksCheckout, pedidoItens, pedidos, type Pedido, type StatusPedido } from "@/db/schema";
 import { sincronizarPedido, STATUS_INFO } from "@/lib/pedidos/status";
@@ -31,6 +31,8 @@ export type PedidoPublico = {
   final: boolean;
   metodo: Pedido["metodo"];
   valorTotalCentavos: number;
+  /** Juros do parcelamento no cartão. Zero nos demais casos. */
+  jurosCentavos: number;
   parcelas: number;
   clienteNome: string;
   clienteEmail: string;
@@ -61,6 +63,7 @@ export async function obterPedidoPublico(id: string, opcoes: { sincronizar?: boo
     final: STATUS_INFO[pedido.status].final,
     metodo: pedido.metodo,
     valorTotalCentavos: pedido.valorTotalCentavos,
+    jurosCentavos: pedido.jurosCentavos,
     parcelas: pedido.parcelas,
     clienteNome: pedido.clienteNome,
     clienteEmail: pedido.clienteEmail,
@@ -138,7 +141,7 @@ export async function resumoPainel() {
       .select({
         pedidos: count(),
         pagos: sql<number>`count(*) filter (where ${pedidos.status} = 'pago')`.mapWith(Number),
-        receita: sql<number>`coalesce(sum(${pedidos.valorTotalCentavos}) filter (where ${pedidos.status} = 'pago'), 0)`.mapWith(Number),
+        receita: sql<number>`coalesce(sum(${pedidos.valorTotalCentavos} + ${pedidos.jurosCentavos}) filter (where ${pedidos.status} = 'pago'), 0)`.mapWith(Number),
         bumps: sql<number>`count(*) filter (where ${pedidos.status} = 'pago' and ${pedidos.bumpAceito})`.mapWith(Number),
       })
       .from(pedidos)
@@ -150,7 +153,10 @@ export async function resumoPainel() {
     agregado(inicioHoje),
     agregado(inicio30),
     db.select({ aguardando: count() }).from(pedidos).where(eq(pedidos.status, "aguardando")),
-    db.select({ receitaTotal: sum(pedidos.valorTotalCentavos).mapWith(Number) }).from(pedidos).where(eq(pedidos.status, "pago")),
+    db
+      .select({ receitaTotal: sql<number>`coalesce(sum(${pedidos.valorTotalCentavos} + ${pedidos.jurosCentavos}), 0)`.mapWith(Number) })
+      .from(pedidos)
+      .where(eq(pedidos.status, "pago")),
   ]);
 
   return { hoje, ultimos30, aguardando, receitaTotal: receitaTotal ?? 0 };

@@ -93,6 +93,24 @@ próxima fase.
 **Decisão.** `leitura` vê pedidos e painel; `operador` também cria produtos e links; `admin` exclui, gerencia usuários,
 configurações e simula pagamentos.
 
+## ADR-015 · Juros de parcelamento pela Tabela Price, calculados no servidor — 2026-09-18
+
+**Decisão.** Cada link define parcelamento máximo, quantas parcelas são sem juros e a taxa mensal. Até o limite sem
+juros, a parcela é o total dividido, arredondado para cima, e o comprador paga o preço à vista. Acima dele, a parcela
+sai da Tabela Price e os juros vão para o comprador. A conta vive em `src/lib/parcelas.ts`, sem dependências, e o
+servidor a refaz em `criarPedido` — o navegador só informa o número de parcelas.
+
+**Por quê.** Tabela Price é a convenção do mercado brasileiro, então o número que aparece no checkout é o mesmo que a
+pessoa veria em qualquer maquininha. Uma função só, compartilhada entre navegador e servidor, elimina a divergência de
+centavos entre o que foi mostrado e o que foi cobrado. Recalcular no servidor impede que um valor adulterado no cliente
+vire preço.
+
+**Consequências.** Ao Asaas vai `installmentCount` mais `totalValue` já com juros, e ele distribui os centavos que
+sobram entre as parcelas. No pedido, `valor_total_centavos` guarda a venda e `juros_centavos` o repasse, separados, de
+modo que o relatório de produto não fica contaminado pelos juros. A taxa é armazenada em centésimos de por cento
+(`299` = 2,99% ao mês) para não usar ponto flutuante no banco. Links antigos ficam com taxa zero e não mudam de
+comportamento.
+
 ## Pendentes
 
 - Hospedagem de produção (Railway, já conectado ao ambiente) e domínio.

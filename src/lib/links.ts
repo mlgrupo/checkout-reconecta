@@ -6,6 +6,7 @@ import { linksCheckout, METODOS, pedidos, produtos, type LinkCheckout, type Meto
 import { lerAparencia, mesclarAparencia, type Aparencia, type AparenciaParcial } from "@/lib/aparencia";
 import { obterAparenciaLoja } from "@/lib/configuracoes";
 import { env } from "@/lib/env";
+import type { ConfigParcelamento } from "@/lib/parcelas";
 import { codigoCurto } from "@/lib/formato";
 import { ErroDominio, urlImagemProduto } from "@/lib/produtos";
 
@@ -22,6 +23,8 @@ export type DadosLink = {
   bumpDescricao?: string | null;
   metodos: Metodo[];
   parcelasMax: number;
+  parcelasSemJuros?: number;
+  jurosMensalBps?: number;
   urlSucesso?: string | null;
   ativo?: boolean;
   codigo?: string | null;
@@ -34,6 +37,9 @@ function validarLink(dados: Partial<DadosLink>) {
   }
   if (dados.parcelasMax !== undefined && (dados.parcelasMax < 1 || dados.parcelasMax > 12)) {
     campos.parcelasMax = "Parcelas entre 1 e 12.";
+  }
+  if (dados.jurosMensalBps !== undefined && (dados.jurosMensalBps < 0 || dados.jurosMensalBps > 2000)) {
+    campos.jurosMensalBps = "Informe uma taxa entre 0 e 20% ao mês.";
   }
   if (dados.bumpProdutoId && dados.produtoId && dados.bumpProdutoId === dados.produtoId) {
     campos.bumpProdutoId = "O order bump precisa ser um produto diferente do principal.";
@@ -104,6 +110,8 @@ export async function criarLink(dados: DadosLink) {
       bumpDescricao: dados.bumpProdutoId ? dados.bumpDescricao?.trim() || null : null,
       metodos: dados.metodos,
       parcelasMax: dados.parcelasMax,
+      parcelasSemJuros: Math.min(dados.parcelasSemJuros ?? dados.parcelasMax, dados.parcelasMax),
+      jurosMensalBps: dados.jurosMensalBps ?? 0,
       urlSucesso: dados.urlSucesso?.trim() || null,
       ativo: dados.ativo ?? true,
     })
@@ -132,6 +140,11 @@ export async function atualizarLink(id: string, dados: Partial<DadosLink>) {
   if (dados.bumpDescricao !== undefined) valores.bumpDescricao = dados.bumpDescricao?.trim() || null;
   if (dados.metodos !== undefined) valores.metodos = dados.metodos;
   if (dados.parcelasMax !== undefined) valores.parcelasMax = dados.parcelasMax;
+  if (dados.parcelasSemJuros !== undefined) {
+    // Sem juros nunca passa do máximo do link, seja o novo valor ou o que já estava gravado.
+    valores.parcelasSemJuros = Math.min(dados.parcelasSemJuros, dados.parcelasMax ?? atual.parcelasMax);
+  }
+  if (dados.jurosMensalBps !== undefined) valores.jurosMensalBps = dados.jurosMensalBps;
   if (dados.urlSucesso !== undefined) valores.urlSucesso = dados.urlSucesso?.trim() || null;
   if (dados.ativo !== undefined) valores.ativo = dados.ativo;
   if (dados.codigo !== undefined && dados.codigo && dados.codigo !== atual.codigo) {
@@ -168,7 +181,7 @@ export async function excluirLink(id: string) {
 export type CheckoutPublico = {
   codigo: string;
   metodos: Metodo[];
-  parcelasMax: number;
+  parcelamento: ConfigParcelamento;
   urlSucesso: string | null;
   aparencia: Aparencia;
   produto: { id: string; nome: string; descricao: string | null; precoCentavos: number; imagem: string | null };
@@ -200,7 +213,11 @@ export async function obterCheckoutPublico(codigo: string): Promise<CheckoutPubl
   return {
     codigo: link.codigo,
     metodos: link.metodos,
-    parcelasMax: link.parcelasMax,
+    parcelamento: {
+      parcelasMax: link.parcelasMax,
+      parcelasSemJuros: link.parcelasSemJuros,
+      jurosMensalBps: link.jurosMensalBps,
+    },
     urlSucesso: link.urlSucesso,
     aparencia: mesclarAparencia(aparenciaLoja, lerAparencia(link.aparencia)),
     produto: {

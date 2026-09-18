@@ -28,6 +28,7 @@ import {
 import { enviarEvento, lerUtm, reais, type ItemGtm } from "@/lib/gtm/eventos";
 import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import type { CheckoutPublico } from "@/lib/links";
+import { opcoesDeParcelamento, taxaEmTexto } from "@/lib/parcelas";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -76,6 +77,13 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
     return lista;
   }, [checkout, bumpAceito]);
   const total = checkout.produto.precoCentavos + (bumpAceito && checkout.bump ? checkout.bump.precoCentavos : 0);
+
+  // Parcelamento: as opções mudam quando o order bump entra ou sai do total.
+  const opcoesParcelas = useMemo(() => opcoesDeParcelamento(total, checkout.parcelamento), [total, checkout.parcelamento]);
+  const parcelaEscolhida = opcoesParcelas[Math.min(parcelas, opcoesParcelas.length) - 1] ?? opcoesParcelas[0];
+  const noCartao = metodo === "cartao";
+  /** O que sai do bolso do comprador: com juros no cartão parcelado, o total à vista no resto. */
+  const totalACobrar = noCartao ? parcelaEscolhida.totalCentavos : total;
 
   useEffect(() => {
     if (modoPrevia) return;
@@ -156,7 +164,15 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
       return;
     }
     setEnviando(true);
-    enviarEvento("add_payment_info", { currency: "BRL", value: reais(total), items: itens, payment_type: metodo }, { parcelas: metodo === "cartao" ? parcelas : 1 });
+    enviarEvento(
+      "add_payment_info",
+      { currency: "BRL", value: reais(total), items: itens, payment_type: metodo },
+      {
+        parcelas: noCartao ? parcelaEscolhida.numero : 1,
+        juros: reais(noCartao ? parcelaEscolhida.jurosCentavos : 0),
+        valor_cobrado: reais(totalACobrar),
+      },
+    );
     try {
       const r = await chamarApi<{ pedido: { id: string } }>(`/api/checkout/${checkout.codigo}/pedidos`, {
         method: "POST",
@@ -164,7 +180,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
           cliente,
           metodo,
           bumpAceito,
-          parcelas: metodo === "cartao" ? parcelas : undefined,
+          parcelas: noCartao ? parcelaEscolhida.numero : undefined,
           cartao: metodo === "cartao" ? cartao : undefined,
           utm: utm.current,
         }),
@@ -187,7 +203,11 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
   }
 
   const rotuloPadrao =
-    metodo === "pix" ? `Pagar ${dinheiro(total)} com Pix` : metodo === "cartao" ? `Pagar ${dinheiro(total)} no cartão` : `Gerar boleto de ${dinheiro(total)}`;
+    metodo === "pix"
+      ? `Pagar ${dinheiro(total)} com Pix`
+      : metodo === "cartao"
+        ? `Pagar ${dinheiro(totalACobrar)} no cartão`
+        : `Gerar boleto de ${dinheiro(total)}`;
   const rotuloBotao = aparencia.textoBotao?.trim() || rotuloPadrao;
 
   // Numeração das etapas segue a ordem escolhida no editor, não a ordem do código.
@@ -239,10 +259,23 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
               <dt className="font-medium text-marinho">Total</dt>
               <dd className="font-display text-2xl font-semibold text-marinho">{dinheiro(total)}</dd>
             </div>
-            {metodo === "cartao" && parcelas > 1 && (
+            {noCartao && parcelaEscolhida.numero > 1 && (
               <p className="text-right text-[12px] text-marinho-3">
-                {parcelas}x de {dinheiro(Math.ceil(total / parcelas))}
+                {parcelaEscolhida.numero}x de {dinheiro(parcelaEscolhida.parcelaCentavos)}
+                {parcelaEscolhida.comJuros ? "" : " sem juros"}
               </p>
+            )}
+            {noCartao && parcelaEscolhida.comJuros && (
+              <div className="flex justify-between gap-3 text-[12px] text-marinho-3">
+                <dt>Juros do parcelamento</dt>
+                <dd>{dinheiro(parcelaEscolhida.jurosCentavos)}</dd>
+              </div>
+            )}
+            {noCartao && parcelaEscolhida.comJuros && (
+              <div className="flex justify-between gap-3 text-sm">
+                <dt className="font-medium text-marinho">Total parcelado</dt>
+                <dd className="font-medium text-marinho">{dinheiro(parcelaEscolhida.totalCentavos)}</dd>
+              </div>
             )}
           </dl>
         </div>
@@ -354,16 +387,28 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                   <Entrada id="c-compl" value={cartao.complemento} onChange={(e) => setCartao({ ...cartao, complemento: e.target.value })} />
                 </Campo>
               </div>
-              {checkout.parcelasMax > 1 && (
-                <Campo rotulo="Parcelas" htmlFor="c-parcelas" className="@xl:col-span-2">
+              {opcoesParcelas.length > 1 && (
+                <Campo
+                  rotulo="Parcelas"
+                  htmlFor="c-parcelas"
+                  className="@xl:col-span-2"
+                  dica={
+                    checkout.parcelamento.jurosMensalBps > 0 && checkout.parcelamento.parcelasSemJuros < checkout.parcelamento.parcelasMax
+                      ? `Até ${checkout.parcelamento.parcelasSemJuros}x sem juros. Acima disso, ${taxaEmTexto(checkout.parcelamento.jurosMensalBps)}.`
+                      : undefined
+                  }
+                >
                   <Escolha
                     id="c-parcelas"
                     valor={parcelas}
                     onChange={setParcelas}
-                    opcoes={Array.from({ length: checkout.parcelasMax }, (_, i) => i + 1).map((n) => ({
-                      valor: n,
-                      rotulo: n === 1 ? `À vista ${dinheiro(total)}` : `${n}x de ${dinheiro(Math.ceil(total / n))}`,
-                      descricao: n === 1 ? undefined : `Total ${dinheiro(total)}`,
+                    opcoes={opcoesParcelas.map((p) => ({
+                      valor: p.numero,
+                      rotulo:
+                        p.numero === 1
+                          ? `À vista ${dinheiro(p.totalCentavos)}`
+                          : `${p.numero}x de ${dinheiro(p.parcelaCentavos)}${p.comJuros ? "" : " sem juros"}`,
+                      descricao: p.numero === 1 ? undefined : p.comJuros ? `Total ${dinheiro(p.totalCentavos)} com juros` : `Total ${dinheiro(p.totalCentavos)}`,
                     }))}
                   />
                 </Campo>

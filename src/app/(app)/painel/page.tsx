@@ -103,7 +103,7 @@ export default async function PaginaPainel() {
                       {METODO_ROTULO[p.metodo]} · {tempoRelativo(p.criadoEm.toISOString())}
                     </span>
                   </span>
-                  <span className="font-display font-semibold text-marinho">{dinheiro(p.valorTotalCentavos)}</span>
+                  <span className="font-display font-semibold text-marinho">{dinheiro(p.valorTotalCentavos + p.jurosCentavos)}</span>
                   <Selo tom={STATUS_UI[p.status].tom} ponto>
                     {STATUS_UI[p.status].rotulo}
                   </Selo>

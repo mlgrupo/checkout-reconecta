@@ -58,6 +58,72 @@ Eventos `add_to_cart` e `remove_from_cart` são enviados ao GTM em cada troca.
 **Configuração.** No link de checkout: produto do bump, preço especial (opcional, mostra o preço original riscado),
 chamada e texto de apoio. Sem preço especial, vale o preço do produto.
 
+## Parcelamento no cartão: divisão e juros
+
+Cada link de checkout define três coisas, em **Links → editar → Parcelamento**:
+
+| Campo | O que é | Padrão |
+|-------|---------|--------|
+| Parcelamento máximo no cartão | Maior número de vezes oferecido, de 1 a 12. | 1 (à vista) |
+| Parcelas sem juros | Até quantas vezes o comprador não paga nada a mais. | Tudo sem juros |
+| Juros ao mês | Taxa aplicada acima do limite sem juros, em por cento ao mês. | 0 |
+
+No banco ficam em `links_checkout.parcelas_max`, `parcelas_sem_juros` e `juros_mensal_bps`.
+A taxa é guardada em centésimos de por cento (`299` é 2,99% ao mês) para não haver ponto flutuante no banco.
+
+### A conta
+
+Toda a matemática está em [`src/lib/parcelas.ts`](../src/lib/parcelas.ts), sem dependências, para que o navegador e o
+servidor cheguem exatamente ao mesmo número.
+
+**Sem juros.** A parcela é o total dividido pelo número de vezes, arredondado para cima, e o total continua sendo o
+preço à vista. Quem paga o custo do parcelamento é o vendedor, na taxa que o Asaas cobra dele.
+
+```
+parcela = teto(total / n)      total cobrado = total
+```
+
+**Com juros.** Tabela Price, a mesma que bancos e maquininhas usam. A partir da taxa mensal `i` e de `n` parcelas:
+
+```
+fator  = i / (1 − (1 + i)^−n)
+parcela = arredonda(total × fator)
+total cobrado = parcela × n
+juros = total cobrado − total
+```
+
+Com R$ 544,00, até 3x sem juros e 2,99% ao mês, o comprador vê:
+
+| Parcelas | Parcela | Total | Juros |
+|---------:|--------:|------:|------:|
+| 1x | R$ 544,00 | R$ 544,00 | — |
+| 3x | R$ 181,34 | R$ 544,00 | — |
+| 6x | R$ 100,39 | R$ 602,34 | R$ 58,34 |
+| 12x | R$ 54,62 | R$ 655,44 | R$ 111,44 |
+
+### Quem decide o preço
+
+O navegador manda apenas o número de parcelas. **O servidor recalcula tudo** em `criarPedido` a partir da configuração
+do link, então alterar o valor pelo console não muda o que é cobrado.
+
+### O que vai para o Asaas
+
+Uma parcela só (`parcelas = 1`) segue como cobrança comum, com `value` igual ao total.
+Duas ou mais viram um parcelamento: `installmentCount` com o número de vezes e `totalValue` com o total **já com juros**.
+O Asaas divide esse total entre as parcelas e distribui os centavos que sobram, então a soma das parcelas dele é sempre
+igual ao que o comprador viu no botão.
+
+### O que fica gravado no pedido
+
+- `valor_total_centavos`: a soma dos itens, sem juros. É por aqui que se sabe quanto o produto vendeu.
+- `juros_centavos`: os juros repassados ao comprador. Zero em Pix, boleto e cartão sem juros.
+- `parcelas`: em quantas vezes.
+
+O total cobrado é a soma dos dois. O painel, a lista de pedidos e o evento `purchase` mostram esse total, porque é o
+dinheiro que entra; o detalhe do pedido abre a conta entre produtos e juros.
+
+Links criados antes desta versão continuam com juros zero, ou seja, sem nenhuma mudança de comportamento.
+
 ## Status do pedido
 
 | Status | Quando | Final? |

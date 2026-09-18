@@ -44,6 +44,8 @@ export async function POST() {
       bumpDescricao: "De R$ 97 por R$ 47 só nesta página. Os exercícios que acompanham cada encontro.",
       metodos: ["pix", "cartao", "boleto"],
       parcelasMax: 6,
+      parcelasSemJuros: 3,
+      jurosMensalBps: 299,
     })
     .returning();
 
