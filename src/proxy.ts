@@ -2,7 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { auth0 } from "@/lib/auth0";
 
 /** Rotas que precisam responder mesmo com o Auth0 fora do ar ou ainda não configurado. */
-const SEMPRE_ABERTAS = [/^\/api\/asaas\/webhook$/, /^\/api\/saude$/, /^\/api\/imagens\//, /^\/c\//];
+const SEMPRE_ABERTAS = [
+  /^\/api\/asaas\/webhook$/,
+  /^\/api\/saude$/,
+  /^\/api\/imagens\//,
+  /^\/api\/auth\//,
+  /^\/sair$/,
+  /^\/c\//,
+];
 
 /**
  * Next.js 16: `proxy.ts` substitui `middleware.ts`.

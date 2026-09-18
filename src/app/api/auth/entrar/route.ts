@@ -1,0 +1,59 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { ipDaRequisicao, lerCorpo } from "@/lib/api";
+import { COOKIE_ADMIN, credenciaisValidas, criarToken, DURACAO_SEGUNDOS, opcoesCookie } from "@/lib/auth/sessao-local";
+import { prontidao } from "@/lib/env";
+
+export const dynamic = "force-dynamic";
+
+const schema = z.object({
+  email: z.string().trim().min(3, "Informe o e-mail."),
+  senha: z.string().min(1, "Informe a senha."),
+});
+
+/** Freio simples contra força bruta: por IP, em memória. */
+const TENTATIVAS_MAX = 8;
+const JANELA_MS = 10 * 60 * 1000;
+const tentativas = new Map<string, { contador: number; ate: number }>();
+
+function bloqueado(ip: string) {
+  const reg = tentativas.get(ip);
+  if (!reg) return false;
+  if (reg.ate < Date.now()) {
+    tentativas.delete(ip);
+    return false;
+  }
+  return reg.contador >= TENTATIVAS_MAX;
+}
+
+function registrarFalha(ip: string) {
+  const agora = Date.now();
+  const reg = tentativas.get(ip);
+  if (!reg || reg.ate < agora) tentativas.set(ip, { contador: 1, ate: agora + JANELA_MS });
+  else reg.contador += 1;
+}
+
+/** POST /api/auth/entrar — login do administrador local. */
+export async function POST(req: Request) {
+  if (!prontidao.adminLocal) {
+    return NextResponse.json({ erro: "O acesso local não está habilitado neste ambiente." }, { status: 404 });
+  }
+  const ip = ipDaRequisicao(req) ?? "desconhecido";
+  if (bloqueado(ip)) {
+    return NextResponse.json({ erro: "Muitas tentativas. Espere alguns minutos e tente de novo." }, { status: 429 });
+  }
+
+  const corpo = await lerCorpo(req, schema);
+  if (corpo.erro) return corpo.erro;
+
+  if (!credenciaisValidas(corpo.dados.email, corpo.dados.senha)) {
+    registrarFalha(ip);
+    console.warn(`[auth] tentativa de login local malsucedida (ip ${ip}).`);
+    return NextResponse.json({ erro: "E-mail ou senha incorretos." }, { status: 401 });
+  }
+
+  tentativas.delete(ip);
+  const resposta = NextResponse.json({ ok: true });
+  resposta.cookies.set(COOKIE_ADMIN, criarToken(corpo.dados.email), opcoesCookie(DURACAO_SEGUNDOS));
+  return resposta;
+}

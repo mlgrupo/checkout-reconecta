@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PaginaConta() {
   const usuario = await exigirUsuario();
+  const ehAcessoLocal = usuario.sub.startsWith("local|");
 
   return (
     <>
@@ -46,7 +47,13 @@ export default async function PaginaConta() {
           </dl>
 
           <div className="mt-6 border-t border-gelo pt-5">
-            <AcoesConta />
+            <AcoesConta podeRedefinirSenha={!ehAcessoLocal} />
+            {ehAcessoLocal && (
+              <p className="mt-3 text-[13px] text-marinho-2">
+                Você entrou pelo acesso de administrador local. A senha fica nas variáveis de ambiente do servidor e é
+                trocada por lá.
+              </p>
+            )}
           </div>
         </Painel>
 

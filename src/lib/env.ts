@@ -32,6 +32,14 @@ const schema = z.object({
 
   DATABASE_URL: z.string().optional(),
   NEXT_PUBLIC_GTM_ID: z.string().optional(),
+
+  /**
+   * Acesso de administrador local, para operar a plataforma antes do Auth0 existir
+   * (ou como porta de emergência). Exige AUTH0_SECRET para assinar a sessão.
+   * Remova as duas variáveis quando o Auth0 estiver no ar.
+   */
+  ADMIN_EMAIL: z.string().optional(),
+  ADMIN_SENHA: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -68,6 +76,9 @@ export const prontidao = {
   /** Conta pagadora do sandbox configurada: "Simular pagamento" de Pix passa pelo Asaas de verdade. */
   asaasPagadorSandbox: env.ASAAS_ENV === "sandbox" && preenchido(env.ASAAS_SANDBOX_PAYER_API_KEY),
   bancoExterno: preenchido(env.DATABASE_URL),
+  /** Login local disponível: precisa de e-mail, senha e do segredo que assina a sessão. */
+  adminLocal:
+    preenchido(env.ADMIN_EMAIL) && preenchido(env.ADMIN_SENHA) && preenchido(env.AUTH0_SECRET) && (env.AUTH0_SECRET ?? "").length >= 32,
 };
 
 /** URL que o Asaas deve chamar com os eventos de cobrança. */

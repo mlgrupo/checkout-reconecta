@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { IconeChave, IconeSair } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 
-export function AcoesConta() {
+export function AcoesConta({ podeRedefinirSenha = true }: { podeRedefinirSenha?: boolean }) {
   const { notificar } = useToast();
   const [enviando, setEnviando] = useState(false);
 
@@ -29,10 +29,12 @@ export function AcoesConta() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variante="secundario" icone={<IconeChave tamanho={16} />} carregando={enviando} onClick={redefinirSenha}>
-        Redefinir minha senha
-      </Button>
-      <Button variante="fantasma" icone={<IconeSair tamanho={16} />} href="/auth/logout">
+      {podeRedefinirSenha && (
+        <Button variante="secundario" icone={<IconeChave tamanho={16} />} carregando={enviando} onClick={redefinirSenha}>
+          Redefinir minha senha
+        </Button>
+      )}
+      <Button variante="fantasma" icone={<IconeSair tamanho={16} />} href="/sair">
         Sair da conta
       </Button>
     </div>

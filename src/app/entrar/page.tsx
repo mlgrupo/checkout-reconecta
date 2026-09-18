@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AnelParceria } from "@/components/brand/anel";
 import { MarcaParceria } from "@/components/brand/lockup";
+import { FormularioEntrar } from "@/components/auth/formulario-entrar";
 import { Button } from "@/components/ui/button";
 import { IconeAlerta, IconeEscudo } from "@/components/ui/icons";
 import { obterUsuario } from "@/lib/auth/session";
@@ -53,7 +54,9 @@ export default async function PaginaEntrar({
         <div className="colchetes w-full max-w-[420px] animate-rise rounded-card border border-gelo bg-branco p-7 shadow-card sm:p-9">
           <h1 className="text-[28px] font-semibold leading-tight">Entrar</h1>
           <p className="mt-2 text-[15px] text-marinho-2">
-            Use sua conta corporativa para acessar o painel de operações.
+            {prontidao.adminLocal
+              ? "Acesse o painel de operações com suas credenciais de administrador."
+              : "Use sua conta corporativa para acessar o painel de operações."}
           </p>
 
           {mensagemErro && (
@@ -66,29 +69,47 @@ export default async function PaginaEntrar({
             </div>
           )}
 
-          {!prontidao.auth0 && (
+          {!prontidao.auth0 && !prontidao.adminLocal && (
             <div
               role="status"
               className="mt-6 rounded-panel border border-ambar/30 bg-ambar-claro px-3.5 py-3 text-[13px] text-ambar"
             >
-              O Auth0 ainda não está configurado neste ambiente. Preencha as variáveis no arquivo
-              <code className="mx-1 font-mono">.env</code>
-              seguindo <span className="font-medium">docs/04-autenticacao-auth0.md</span>.
+              Nenhuma forma de acesso está configurada neste ambiente. Preencha as variáveis do Auth0 ou o acesso de
+              administrador, seguindo <span className="font-medium">docs/04-autenticacao-auth0.md</span>.
             </div>
           )}
 
-          <div className="mt-8 flex flex-col gap-3">
-            <Button href={`/auth/login?returnTo=${encodeURIComponent(destino)}`} tamanho="lg" className="w-full">
-              Entrar com minha conta
-            </Button>
-            <p className="text-center text-[13px] text-marinho-3">
+          {prontidao.adminLocal && <FormularioEntrar destino={destino} />}
+
+          {prontidao.auth0 && (
+            <div className={prontidao.adminLocal ? "mt-6 border-t border-gelo pt-6" : "mt-8"}>
+              <Button
+                href={`/auth/login?returnTo=${encodeURIComponent(destino)}`}
+                tamanho="lg"
+                variante={prontidao.adminLocal ? "secundario" : "primario"}
+                className="w-full"
+              >
+                Entrar com minha conta corporativa
+              </Button>
+            </div>
+          )}
+
+          {!prontidao.adminLocal && (
+            <p className="mt-3 text-center text-[13px] text-marinho-3">
               Sem acesso? Peça a um administrador da Reconecta para criar seu usuário.
             </p>
-          </div>
+          )}
 
-          <div className="mt-8 flex items-center gap-2 border-t border-gelo pt-5 text-[12px] text-marinho-3">
-            <IconeEscudo tamanho={15} className="text-azul" />
-            Autenticação protegida pelo Auth0. Sua senha nunca passa por este servidor.
+          <div className="mt-8 flex items-start gap-2 border-t border-gelo pt-5 text-[12px] text-marinho-3">
+            <IconeEscudo tamanho={15} className="mt-0.5 shrink-0 text-azul" />
+            {prontidao.adminLocal ? (
+              <span>
+                Acesso de administrador em uso enquanto o login corporativo não está ativo. A sessão dura 8 horas e
+                fica em um cookie assinado.
+              </span>
+            ) : (
+              <span>Autenticação protegida pelo Auth0. Sua senha nunca passa por este servidor.</span>
+            )}
           </div>
         </div>
       </section>

@@ -112,7 +112,7 @@ export function Shell({ usuario, children }: { usuario: UsuarioSessao; children:
         </span>
       </Link>
       <a
-        href="/auth/logout"
+        href="/sair"
         className="mt-1 flex h-9 items-center gap-3 rounded-control px-3 text-sm text-marinho-2 transition-colors hover:bg-bordo-claro hover:text-bordo"
       >
         <IconeSair />

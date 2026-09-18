@@ -1,4 +1,34 @@
-# 04 · Autenticação com Auth0
+# 04 · Autenticação
+
+A plataforma aceita duas formas de entrar no painel:
+
+1. **Auth0** — o caminho definitivo, com papéis, convites e gestão de usuários. É o resto deste documento.
+2. **Administrador local** — uma porta de entrada por e-mail e senha, para operar antes do Auth0 existir ou em
+   emergência. Descrita logo abaixo.
+
+## Administrador local
+
+Defina as duas variáveis no ambiente (Railway, ou `.env` em desenvolvimento):
+
+```
+ADMIN_EMAIL=voce@reconectaoficial.com.br
+ADMIN_SENHA=uma-senha-longa-e-aleatoria
+```
+
+Requisitos e comportamento:
+
+- Exige `AUTH0_SECRET` preenchido: é a chave que assina o cookie de sessão (HMAC-SHA256). Sem ela o acesso não liga.
+- Quem entra por aqui recebe o papel **administrador**, com acesso a tudo.
+- A sessão dura 8 horas, fica num cookie `httpOnly` e `sameSite=lax`, marcado como `secure` quando a URL é HTTPS.
+- Trocar `ADMIN_EMAIL` invalida na hora as sessões abertas com o e-mail antigo.
+- São no máximo 8 tentativas de login por IP a cada 10 minutos; depois disso a resposta é 429.
+- O servidor registra no boot um aviso de que o acesso está habilitado, e outro se a senha tiver menos de 12 caracteres.
+- Diferente do Auth0, **a senha passa pelo servidor** nesse fluxo. Use HTTPS e uma senha longa e exclusiva.
+- Para desligar, apague as duas variáveis e faça um novo deploy. Recomendado assim que o Auth0 estiver no ar.
+
+Sair do painel usa `/sair`, que encerra tanto a sessão local quanto a do Auth0.
+
+# Auth0
 
 Passo a passo para deixar o login e a gestão de usuários funcionando. Tempo estimado: 20 minutos.
 

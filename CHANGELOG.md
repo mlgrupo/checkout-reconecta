@@ -2,6 +2,14 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.3.0] — 2026-09-18
+
+### Adicionado
+
+- Acesso de administrador local por e-mail e senha (`ADMIN_EMAIL` e `ADMIN_SENHA`), para operar o painel antes do Auth0 existir. Sessão de 8 horas em cookie assinado com HMAC, limite de 8 tentativas por IP a cada 10 minutos e aviso no boot enquanto estiver habilitado.
+- Rota `/sair` única, que encerra tanto a sessão local quanto a do Auth0.
+- Tela de entrada mostra o formulário quando o acesso local está ligado, e o botão do Auth0 quando ele existe.
+
 ## [0.2.2] — 2026-09-18
 
 ### Adicionado

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 import { papeisDoUsuario, type Papel } from "@/lib/auth/roles";
+import { usuarioLocal } from "@/lib/auth/sessao-local";
 
 /** Hierarquia: admin engloba operador, que engloba leitura. */
 const NIVEL: Record<Papel, number> = { leitura: 1, operador: 2, admin: 3 };
@@ -36,8 +37,15 @@ function normalizar(user: Record<string, unknown>): UsuarioSessao {
   };
 }
 
-/** Sessão atual ou null. Uso em Server Components e Route Handlers. */
+/**
+ * Sessão atual ou null. Uso em Server Components e Route Handlers.
+ * Aceita duas origens: a sessão do Auth0 e o administrador local (docs/04).
+ */
 export async function obterUsuario(): Promise<UsuarioSessao | null> {
+  const local = await usuarioLocal();
+  if (local) {
+    return { sub: local.sub, name: local.name, email: local.email, email_verified: true, roles: ["admin"] };
+  }
   try {
     const session = await auth0.getSession();
     return session ? normalizar(session.user as Record<string, unknown>) : null;

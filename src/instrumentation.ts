@@ -18,6 +18,15 @@ export async function register() {
   }
 
   const { env, prontidao } = await import("@/lib/env");
+  if (prontidao.adminLocal) {
+    console.warn(
+      `[auth] acesso de administrador local HABILITADO para ${env.ADMIN_EMAIL}. ` +
+        "É uma porta de entrada sem Auth0: remova ADMIN_EMAIL e ADMIN_SENHA quando o Auth0 estiver no ar.",
+    );
+    if ((env.ADMIN_SENHA ?? "").length < 12) {
+      console.warn("[auth] a senha do administrador local tem menos de 12 caracteres. Use uma senha longa.");
+    }
+  }
   if (env.ASAAS_ENV !== "simulacao" && !prontidao.asaasReal) {
     console.warn(
       `[asaas] ASAAS_ENV=${env.ASAAS_ENV} mas ASAAS_API_KEY está vazia. Se ela veio de um arquivo .env, ` +
