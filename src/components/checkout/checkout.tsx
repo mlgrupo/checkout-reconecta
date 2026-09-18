@@ -259,22 +259,22 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
               <dt className="font-medium text-marinho">Total</dt>
               <dd className="font-display text-2xl font-semibold text-marinho">{dinheiro(total)}</dd>
             </div>
+            {noCartao && parcelaEscolhida.comJuros && (
+              <>
+                <div className="flex justify-between gap-3 text-[12px] text-marinho-3">
+                  <dt>Juros do parcelamento</dt>
+                  <dd>{dinheiro(parcelaEscolhida.jurosCentavos)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-medium text-marinho">Total parcelado</dt>
+                  <dd className="font-display text-lg font-semibold text-marinho">{dinheiro(parcelaEscolhida.totalCentavos)}</dd>
+                </div>
+              </>
+            )}
             {noCartao && parcelaEscolhida.numero > 1 && (
-              <p className="text-right text-[12px] text-marinho-3">
+              <div className="text-right text-[12px] text-marinho-3">
                 {parcelaEscolhida.numero}x de {dinheiro(parcelaEscolhida.parcelaCentavos)}
                 {parcelaEscolhida.comJuros ? "" : " sem juros"}
-              </p>
-            )}
-            {noCartao && parcelaEscolhida.comJuros && (
-              <div className="flex justify-between gap-3 text-[12px] text-marinho-3">
-                <dt>Juros do parcelamento</dt>
-                <dd>{dinheiro(parcelaEscolhida.jurosCentavos)}</dd>
-              </div>
-            )}
-            {noCartao && parcelaEscolhida.comJuros && (
-              <div className="flex justify-between gap-3 text-sm">
-                <dt className="font-medium text-marinho">Total parcelado</dt>
-                <dd className="font-medium text-marinho">{dinheiro(parcelaEscolhida.totalCentavos)}</dd>
               </div>
             )}
           </dl>
@@ -400,7 +400,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                 >
                   <Escolha
                     id="c-parcelas"
-                    valor={parcelas}
+                    valor={parcelaEscolhida.numero}
                     onChange={setParcelas}
                     opcoes={opcoesParcelas.map((p) => ({
                       valor: p.numero,
