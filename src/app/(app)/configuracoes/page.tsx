@@ -6,7 +6,7 @@ import { modoDb } from "@/db";
 import { ehAdmin } from "@/lib/auth/roles";
 import { exigirUsuario } from "@/lib/auth/session";
 import { obterConfiguracoes } from "@/lib/configuracoes";
-import { env, prontidao } from "@/lib/env";
+import { env, prontidao, urlWebhookAsaas } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Configurações" };
 export const dynamic = "force-dynamic";
@@ -25,6 +25,8 @@ export default async function PaginaConfiguracoes() {
           asaas: env.ASAAS_ENV,
           asaasChave: prontidao.asaasReal,
           webhookToken: prontidao.asaasWebhook,
+          webhookUrl: urlWebhookAsaas(),
+          pagadorSandbox: prontidao.asaasPagadorSandbox,
           banco: modoDb(),
           baseUrl: env.APP_BASE_URL,
           gtmEnv: env.NEXT_PUBLIC_GTM_ID ?? "",

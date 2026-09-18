@@ -37,28 +37,42 @@ Valores monetários são **inteiros em centavos**. Datas com fuso (`timestamptz`
 
 ## Deploy no Railway
 
-O Railway já está conectado a este ambiente. Passos:
+O repositório já traz `railway.json` (build com pnpm, start `pnpm start`, healthcheck em `/api/saude`).
+O Next escuta na porta que o Railway injeta em `PORT`.
 
-1. **Postgres**: no projeto Railway, adicione o plugin PostgreSQL. Copie `DATABASE_URL`.
-2. **Serviço web**: aponte para o repositório `mlgrupo/checkout-reconecta`. Build `pnpm install && pnpm build`,
-   start `pnpm start`. Node 20+.
-3. **Variáveis** (Settings → Variables):
+1. **Projeto**: crie um projeto novo (ex.: `Checkout Reconecta`) ou use o existente da Reconecta.
+2. **Postgres**: **New → Database → PostgreSQL**. Ele expõe a variável `DATABASE_URL` no próprio serviço.
+   Se preferir reaproveitar o projeto "Banco de dados RECONECTA", crie um banco novo lá e copie a URL.
+3. **Serviço web**: **New → GitHub Repo → `mlgrupo/checkout-reconecta`**, branch `main`. O Railway detecta o
+   `railway.json`. Node 20+ (Nixpacks escolhe sozinho pelo `engines` do `package.json`).
+4. **Variáveis** do serviço web (Settings → Variables). Use referência para o banco: `${{Postgres.DATABASE_URL}}`.
 
    ```
-   APP_BASE_URL=https://SEU-DOMINIO
-   DATABASE_URL=...            (referência ao Postgres)
+   NODE_ENV=production
+   APP_BASE_URL=https://SEU-DOMINIO.up.railway.app     (o domínio gerado no passo 5; atualize depois)
+   DATABASE_URL=${{Postgres.DATABASE_URL}}
    AUTH0_DOMAIN / AUTH0_CLIENT_ID / AUTH0_CLIENT_SECRET / AUTH0_SECRET
    AUTH0_MGMT_CLIENT_ID / AUTH0_MGMT_CLIENT_SECRET
-   ASAAS_ENV=sandbox           (production quando for ao ar)
+   ASAAS_ENV=sandbox                                    (production quando for ao ar)
    ASAAS_API_KEY=...
-   ASAAS_WEBHOOK_TOKEN=...     (gere: openssl rand -hex 24)
-   NEXT_PUBLIC_GTM_ID=GTM-...  (opcional)
-   NODE_ENV=production
+   ASAAS_WEBHOOK_TOKEN=...                              (gere: openssl rand -hex 24)
+   ASAAS_WEBHOOK_BASE_URL=                              (vazio: usa APP_BASE_URL)
+   ASAAS_SANDBOX_PAYER_API_KEY=...                      (opcional, só sandbox)
+   NEXT_PUBLIC_GTM_ID=GTM-...                           (opcional)
    ```
 
-4. **Domínio**: gere o domínio no Railway ou aponte o seu. Atualize no Auth0 (callback/logout) e em `APP_BASE_URL`.
-5. **Webhook**: no painel → Configurações → **Registrar webhook no Asaas**.
-6. **Auth0**: cadastre as URLs de produção (docs/04 §2).
+5. **Domínio**: Settings → Networking → **Generate Domain** (porta 3000) ou aponte o seu. Coloque em `APP_BASE_URL`
+   e cadastre no Auth0 (`/auth/callback` e logout).
+6. **Deploy**: o primeiro deploy roda as migrações no boot (`instrumentation.ts`). Confira `/api/saude` → `{"ok":true,"banco":"postgres"}`.
+7. **Webhook**: painel → Configurações → **Registrar webhook no Asaas**. A URL registrada é a pública do Railway.
+
+Cada push em `main` gera um novo deploy. Para homologação separada, crie um segundo ambiente no Railway com
+`ASAAS_ENV=sandbox` e outro banco.
+
+### Sem Postgres
+
+Se o serviço subir sem `DATABASE_URL`, ele usa PGlite em disco local e avisa no log: os dados somem a cada deploy.
+Serve só para um teste rápido de webhook, nunca para vender.
 
 Alternativa: Vercel funciona igual (Postgres externo obrigatório; sem PGlite em serverless).
 

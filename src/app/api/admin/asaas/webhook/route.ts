@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { asaas } from "@/lib/asaas";
 import { respostaErro } from "@/lib/api";
 import { exigirApi } from "@/lib/auth/session";
-import { env } from "@/lib/env";
+import { env, urlWebhookAsaas } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +30,7 @@ const EVENTOS = [
   "PAYMENT_BANK_SLIP_CANCELLED",
 ];
 
-function urlWebhook() {
-  return `${env.APP_BASE_URL.replace(/\/$/, "")}/api/asaas/webhook`;
-}
+const urlWebhook = urlWebhookAsaas;
 
 /** GET — situação do webhook no Asaas para a URL desta aplicação. */
 export async function GET() {

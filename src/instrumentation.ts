@@ -5,6 +5,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { obterDb, modoDb } = await import("@/db");
+  if (process.env.NODE_ENV === "production" && modoDb() === "pglite") {
+    console.warn(
+      "[db] AVISO: rodando em produção sem DATABASE_URL. O PGlite grava em disco local e os dados somem a cada deploy. Configure um PostgreSQL (docs/10).",
+    );
+  }
   try {
     await obterDb();
     console.log(`[db] conectado (${modoDb()}) e migrações aplicadas.`);

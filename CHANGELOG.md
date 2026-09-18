@@ -2,6 +2,16 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.2.1] — 2026-09-18
+
+### Adicionado
+
+- `ASAAS_WEBHOOK_BASE_URL` para apontar o webhook a uma URL pública diferente de `APP_BASE_URL` (túnel ou host separado).
+- `ASAAS_SANDBOX_PAYER_API_KEY`: com uma conta pagadora do sandbox, "Simular pagamento" de Pix paga o QR Code de verdade e o webhook real do Asaas chega.
+- `ASAAS_CREDENTIALS_ENC_KEY` aceita e reservada para subcontas (não usada ainda).
+- `railway.json` (build, start e healthcheck) e endpoint `/api/saude`; aviso no boot quando produção roda sem Postgres.
+- Configurações mostram a URL efetiva do webhook e a conta pagadora.
+
 ## [0.2.0] — 2026-09-18
 
 ### Adicionado

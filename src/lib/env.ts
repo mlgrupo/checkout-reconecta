@@ -18,9 +18,17 @@ const schema = z.object({
   AUTH0_CONNECTION: z.string().default("Username-Password-Authentication"),
   AUTH0_ROLES_CLAIM: z.string().default("https://reconecta.com.br/roles"),
 
-  ASAAS_ENV: z.enum(["simulacao", "sandbox", "production"]).default("simulacao"),
+  ASAAS_ENV: z
+    .preprocess((v) => (typeof v === "string" ? v.trim().toLowerCase() : v), z.enum(["simulacao", "sandbox", "production"]))
+    .default("simulacao"),
   ASAAS_API_KEY: z.string().optional(),
   ASAAS_WEBHOOK_TOKEN: z.string().optional(),
+  /** URL pública que o Asaas chama (sem barra final). Vazio usa APP_BASE_URL. */
+  ASAAS_WEBHOOK_BASE_URL: z.string().optional(),
+  /** Chave de uma segunda conta sandbox (pagadora) para pagar QR Codes Pix de verdade nos testes. */
+  ASAAS_SANDBOX_PAYER_API_KEY: z.string().optional(),
+  /** Reservada: chave para criptografar credenciais de subcontas, quando houver split. Não usada ainda. */
+  ASAAS_CREDENTIALS_ENC_KEY: z.string().optional(),
 
   DATABASE_URL: z.string().optional(),
   NEXT_PUBLIC_GTM_ID: z.string().optional(),
@@ -57,5 +65,13 @@ export const prontidao = {
   asaas: env.ASAAS_ENV === "simulacao" || preenchido(env.ASAAS_API_KEY),
   asaasReal: env.ASAAS_ENV !== "simulacao" && preenchido(env.ASAAS_API_KEY),
   asaasWebhook: preenchido(env.ASAAS_WEBHOOK_TOKEN),
+  /** Conta pagadora do sandbox configurada: "Simular pagamento" de Pix passa pelo Asaas de verdade. */
+  asaasPagadorSandbox: env.ASAAS_ENV === "sandbox" && preenchido(env.ASAAS_SANDBOX_PAYER_API_KEY),
   bancoExterno: preenchido(env.DATABASE_URL),
 };
+
+/** URL que o Asaas deve chamar com os eventos de cobrança. */
+export function urlWebhookAsaas() {
+  const base = (preenchido(env.ASAAS_WEBHOOK_BASE_URL) ? env.ASAAS_WEBHOOK_BASE_URL! : env.APP_BASE_URL).replace(/\/$/, "");
+  return `${base}/api/asaas/webhook`;
+}

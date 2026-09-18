@@ -15,6 +15,8 @@ type Ambiente = {
   asaas: "simulacao" | "sandbox" | "production";
   asaasChave: boolean;
   webhookToken: boolean;
+  webhookUrl: string;
+  pagadorSandbox: boolean;
   banco: "postgres" | "pglite";
   baseUrl: string;
   gtmEnv: string;
@@ -154,8 +156,14 @@ export function FormularioConfiguracoes({ inicial, ambiente }: { inicial: Config
         <Painel titulo="Webhook do Asaas" descricao="Como o Asaas avisa que um pagamento entrou. Sem ele, o status é conferido por consulta periódica.">
           <div className="flex flex-col gap-3 text-sm">
             <div className="rounded-panel border border-gelo bg-neve px-3 py-2 font-mono text-[12px] text-marinho-2 break-all">
-              {webhook && webhook !== "erro" ? webhook.url : `${ambiente.baseUrl}/api/asaas/webhook`}
+              {webhook && webhook !== "erro" ? webhook.url : ambiente.webhookUrl}
             </div>
+            {ambiente.asaas === "sandbox" && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-marinho-2">Conta pagadora (Pix de teste)</span>
+                <Selo tom={ambiente.pagadorSandbox ? "verde" : "neutro"}>{ambiente.pagadorSandbox ? "Configurada" : "Opcional"}</Selo>
+              </div>
+            )}
             <div className="flex items-center justify-between gap-3">
               <span className="text-marinho-2">Token de verificação</span>
               <Selo tom={ambiente.webhookToken ? "verde" : "bordo"}>{ambiente.webhookToken ? "Configurado" : "Defina ASAAS_WEBHOOK_TOKEN"}</Selo>

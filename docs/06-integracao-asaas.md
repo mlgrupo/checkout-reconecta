@@ -13,6 +13,17 @@
 Chave do sandbox: crie a conta em <https://sandbox.asaas.com>, depois **Configurações → Integrações → API** e gere a chave.
 Coloque em `ASAAS_API_KEY`.
 
+## Variáveis
+
+| Variável | Uso |
+|----------|-----|
+| `ASAAS_ENV` | `simulacao`, `sandbox` ou `production` (maiúsculas também aceitas). |
+| `ASAAS_API_KEY` | Chave da conta recebedora (a da Reconecta) no ambiente escolhido. |
+| `ASAAS_WEBHOOK_TOKEN` | Token que o Asaas devolve no header `asaas-access-token`. Gere um valor forte. |
+| `ASAAS_WEBHOOK_BASE_URL` | URL pública que o Asaas chama, sem barra final. Vazio usa `APP_BASE_URL`. Use quando a app roda atrás de túnel ou em host diferente. |
+| `ASAAS_SANDBOX_PAYER_API_KEY` | Opcional, só sandbox: chave de uma **segunda** conta sandbox (pagadora). Com ela, "Simular pagamento" de um Pix paga o QR Code de verdade (`POST /pix/qrCodes/pay`), o dinheiro entra na conta recebedora e o Asaas dispara o webhook real. Exige chave Pix cadastrada na conta recebedora e saldo na pagadora. Sem ela, usamos `POST /sandbox/payment/{id}/confirm`. |
+| `ASAAS_CREDENTIALS_ENC_KEY` | Reservada para criptografar credenciais de subcontas quando houver split. Não é lida nesta fase. |
+
 ## Por que checkout próprio e não o "Checkout Asaas"
 
 O Asaas oferece um checkout hospedado (`POST /v3/checkouts`), mas ele:
@@ -44,7 +55,9 @@ Vencimentos: Pix vence no dia; boleto em 3 dias (`DIAS_VENCIMENTO_BOLETO` em `sr
 
 ## Webhook
 
-- URL: `{APP_BASE_URL}/api/asaas/webhook`.
+- URL: `{ASAAS_WEBHOOK_BASE_URL ou APP_BASE_URL}/api/asaas/webhook`. Precisa ser pública: o Asaas não alcança
+  `localhost`. Em desenvolvimento use um túnel (`cloudflared tunnel --url http://localhost:3000` ou ngrok) e coloque a
+  URL do túnel em `ASAAS_WEBHOOK_BASE_URL`; em homologação/produção, o deploy no Railway (docs/10).
 - Autenticação: header `asaas-access-token` comparado com `ASAAS_WEBHOOK_TOKEN` (comparação em tempo constante).
 - Idempotência: o `id` do evento é chave primária em `eventos_webhook`; repetições respondem `duplicado`.
 - Resposta 200 assim que o evento é gravado e aplicado; erro interno responde 500 para o Asaas reenviar.

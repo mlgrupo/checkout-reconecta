@@ -35,21 +35,21 @@ export class ErroAsaas extends Error {
   }
 }
 
-type Opcoes = RequestInit & { timeoutMs?: number };
+type Opcoes = RequestInit & { timeoutMs?: number; chave?: string };
 
 async function chamar<T>(caminho: string, init: Opcoes = {}): Promise<T> {
   if (env.ASAAS_ENV === "simulacao") {
     throw new ErroAsaas(500, "Cliente real do Asaas chamado em modo simulação.");
   }
-  if (!env.ASAAS_API_KEY) {
+  const { timeoutMs = 30_000, chave = env.ASAAS_API_KEY, ...resto } = init;
+  if (!chave) {
     throw new ErroAsaas(503, "ASAAS_API_KEY não configurada. Preencha o .env (ver docs/06).");
   }
   const base = BASES[env.ASAAS_ENV];
-  const { timeoutMs = 30_000, ...resto } = init;
   const res = await fetch(`${base}${caminho}`, {
     ...resto,
     headers: {
-      access_token: env.ASAAS_API_KEY,
+      access_token: chave,
       "content-type": "application/json",
       accept: "application/json",
       "user-agent": "CheckoutReconecta/0.1",
@@ -134,3 +134,26 @@ export const asaasReal: PortaAsaas = {
     return chamar<AsaasWebhook>("/webhooks", { method: "POST", body: JSON.stringify(dados) });
   },
 };
+
+export type PagamentoQrCode = {
+  id: string;
+  status: string;
+  value: number;
+  endToEndIdentifier?: string | null;
+  transactionReceiptUrl?: string | null;
+};
+
+/**
+ * Paga um QR Code Pix usando a conta pagadora do sandbox (ASAAS_SANDBOX_PAYER_API_KEY).
+ * Reproduz o caminho real: o dinheiro sai da conta pagadora, entra na conta da plataforma e o
+ * Asaas dispara PAYMENT_RECEIVED pelo webhook. Exige chave Pix cadastrada na conta recebedora.
+ */
+export async function pagarQrCodeComoPagador(dados: { payload: string; value: number; description?: string }) {
+  if (env.ASAAS_ENV !== "sandbox") throw new ErroAsaas(400, "A conta pagadora só existe no sandbox.");
+  if (!env.ASAAS_SANDBOX_PAYER_API_KEY) throw new ErroAsaas(503, "ASAAS_SANDBOX_PAYER_API_KEY não configurada.");
+  return chamar<PagamentoQrCode>("/pix/qrCodes/pay", {
+    method: "POST",
+    chave: env.ASAAS_SANDBOX_PAYER_API_KEY,
+    body: JSON.stringify({ qrCode: { payload: dados.payload }, value: dados.value, description: dados.description }),
+  });
+}
