@@ -1,11 +1,10 @@
 # Materiais de marca
 
-Kits, guias e arquivos-fonte das logos da Reconecta e do Asaas. Nada desta pasta é servido pelo site.
+Kits, guias e arquivos-fonte da logo da Reconecta. Nada desta pasta é servido pelo site.
 
-Os SVGs finais, prontos para uso, ficam em `public/brand/` com os nomes fixos:
+O SVG final, pronto para uso, fica em `public/brand/` com o nome fixo:
 
-- `public/brand/reconecta.svg`
-- `public/brand/asaas.svg`
-- `public/brand/reconecta-simbolo.svg` (opcional)
+- `public/brand/reconecta.svg` (substitua o placeholder atual mantendo o nome)
+- `public/brand/reconecta-simbolo.svg` (opcional, para favicon e telas estreitas)
 
-Regras de aplicação em `docs/07-marca-e-logos.md`.
+O selo do Asaas **não** fica aqui: é carregado sempre pela URL oficial (ver `docs/07-marca-e-logos.md`).
