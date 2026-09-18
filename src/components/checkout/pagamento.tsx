@@ -79,12 +79,14 @@ export function Pagamento({ inicial, codigo }: Props) {
     };
   }, [pedido.id, pedido.final, pedido.status]);
 
-  // Relógio para o contador do Pix.
+  // Relógio para o contador do Pix. Só tica quando falta menos de 2 dias.
   useEffect(() => {
     if (pedido.metodo !== "pix" || pedido.final) return;
+    const expira = pedido.pix?.expiraEm ? new Date(pedido.pix.expiraEm).getTime() : null;
+    if (expira && expira - Date.now() > 48 * 3_600_000) return;
     const t = window.setInterval(() => setAgora(Date.now()), 1000);
     return () => window.clearInterval(t);
-  }, [pedido.metodo, pedido.final]);
+  }, [pedido.metodo, pedido.final, pedido.pix?.expiraEm]);
 
   async function copiar(texto: string) {
     try {
@@ -171,12 +173,15 @@ export function Pagamento({ inicial, codigo }: Props) {
   if (pedido.metodo === "pix" && pedido.pix) {
     const expira = pedido.pix.expiraEm ? new Date(pedido.pix.expiraEm).getTime() : null;
     const restante = expira ? Math.max(0, expira - agora) : null;
+    // Até 1h vira contagem regressiva; até 2 dias, horas; além disso, a data de validade.
     const textoRestante =
       restante === null
         ? null
-        : restante >= 3_600_000
-          ? `Válido por ${Math.floor(restante / 3_600_000)}h ${String(Math.floor((restante % 3_600_000) / 60_000)).padStart(2, "0")}min`
-          : `Válido por ${String(Math.floor(restante / 60_000)).padStart(2, "0")}:${String(Math.floor((restante % 60_000) / 1000)).padStart(2, "0")}`;
+        : restante > 48 * 3_600_000
+          ? `Válido até ${dataBr(pedido.pix.expiraEm, { dateStyle: "short" })}`
+          : restante >= 3_600_000
+            ? `Válido por ${Math.floor(restante / 3_600_000)}h ${String(Math.floor((restante % 3_600_000) / 60_000)).padStart(2, "0")}min`
+            : `Válido por ${String(Math.floor(restante / 60_000)).padStart(2, "0")}:${String(Math.floor((restante % 60_000) / 1000)).padStart(2, "0")}`;
     return (
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <div className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
