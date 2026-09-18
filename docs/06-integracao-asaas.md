@@ -24,6 +24,84 @@ Coloque em `ASAAS_API_KEY`.
 | `ASAAS_SANDBOX_PAYER_API_KEY` | Opcional, só sandbox: chave de uma **segunda** conta sandbox (pagadora). Com ela, "Simular pagamento" de um Pix paga o QR Code de verdade (`POST /pix/qrCodes/pay`), o dinheiro entra na conta recebedora e o Asaas dispara o webhook real. Exige chave Pix cadastrada na conta recebedora e saldo na pagadora. Sem ela, usamos `POST /sandbox/payment/{id}/confirm`. |
 | `ASAAS_CREDENTIALS_ENC_KEY` | Reservada para criptografar credenciais de subcontas quando houver split. Não é lida nesta fase. |
 
+## Passo a passo no painel do Asaas
+
+Onde encontrar cada valor. Os menus abaixo são os do painel do Asaas (sandbox e produção têm a mesma navegação).
+
+### 1. Conta sandbox
+
+<https://sandbox.asaas.com> → cadastre a conta. No sandbox os documentos são aprovados automaticamente e nenhum
+valor real circula. Use a mesma razão social da conta de produção para os testes ficarem parecidos.
+
+### 2. `ASAAS_API_KEY`
+
+**Menu do usuário → Integrações → API** → *Gerar nova chave*.
+
+- Só usuários administradores conseguem gerar.
+- **A chave aparece uma única vez.** Copie na hora; não dá para recuperar depois.
+- Sandbox e produção têm chaves diferentes. A do sandbox começa com `$aact_hmlg_`.
+- Dá para nomear, definir validade, desativar e apagar chaves. Cada conta guarda até 10.
+
+### 3. `ASAAS_ENV`
+
+Não vem do Asaas, é da nossa plataforma: `simulacao` (sem chave), `sandbox` ou `production`. Troque junto com a chave.
+
+### 4. Chave Pix da conta recebedora
+
+Não é variável de ambiente, mas é pré-requisito para o Pix funcionar direito.
+
+**Sem chave Pix cadastrada, o QR Code gerado vale só até as 23:59 do mesmo dia.** Com chave, vale 12 meses após o
+vencimento da cobrança.
+
+- Painel: **Menu do usuário → Pix → Minhas chaves → Criar chave** (escolha *chave aleatória*).
+- Ou pela API: `POST /v3/pix/addressKeys` com `{"type":"EVP"}`.
+- Limites: 5 chaves para pessoa física, 20 para jurídica. Espere 1 minuto entre duas criações.
+- A conta precisa estar aprovada para criar chave.
+
+### 5. `ASAAS_WEBHOOK_TOKEN`
+
+Este valor **você inventa** — é o segredo que o Asaas devolve no header `asaas-access-token` para provarmos que o
+evento veio dele. Regras do Asaas: 32 a 255 caracteres, sem espaços, sem sequências óbvias e **nunca** a chave de API.
+
+Gere um com `openssl rand -hex 24`. O mesmo valor vai no `.env`/Railway e no cadastro do webhook.
+
+### 6. `ASAAS_WEBHOOK_BASE_URL` e o registro do webhook
+
+A URL precisa ser pública. Em produção é o domínio do Railway; em desenvolvimento, um túnel.
+
+O jeito mais rápido é pelo nosso painel: **Configurações → Registrar webhook no Asaas**. Ele cria o webhook já com a
+URL certa, o token e todos os eventos.
+
+Para fazer à mão: **Menu do usuário → Integrações → Webhooks → Criar Webhook**, com os campos:
+
+| Campo | Valor |
+|-------|-------|
+| Nome | Checkout Reconecta |
+| URL | `https://SEU-DOMINIO/api/asaas/webhook` |
+| E-mail | quem recebe aviso se a fila parar |
+| Versão da API | v3 |
+| Token de autenticação | o mesmo `ASAAS_WEBHOOK_TOKEN` (há um botão *Gerar token*) |
+| Habilitado | sim |
+| Tipo de envio | sequencial |
+| Eventos | os de cobrança (`PAYMENT_*`) |
+
+Cada conta aceita até 10 webhooks com URLs diferentes.
+
+### 7. `ASAAS_SANDBOX_PAYER_API_KEY` (opcional)
+
+Para pagar um QR Code Pix de verdade no sandbox são necessárias **duas** contas: a recebedora (a nossa, com chave Pix
+cadastrada) e uma **pagadora, com saldo**. Crie uma segunda conta em <https://sandbox.asaas.com>, gere a chave de API
+dela (mesmo caminho do passo 2), adicione saldo de teste e coloque essa chave aqui.
+
+Com ela preenchida, o botão **Simular pagamento** de um pedido Pix chama `POST /v3/pix/qrCodes/pay` na conta
+pagadora: o dinheiro sai de lá, entra na nossa e o Asaas dispara o webhook real. Sem ela, usamos
+`POST /v3/sandbox/payment/{id}/confirm`, que confirma a cobrança sem movimentar saldo.
+
+### 8. `ASAAS_CREDENTIALS_ENC_KEY`
+
+Não vem do Asaas. É uma chave nossa, reservada para criptografar credenciais de subcontas quando houver split.
+Gere com `openssl rand -hex 32`.
+
 ## Por que checkout próprio e não o "Checkout Asaas"
 
 O Asaas oferece um checkout hospedado (`POST /v3/checkouts`), mas ele:
