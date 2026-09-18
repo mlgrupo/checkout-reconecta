@@ -380,7 +380,9 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
 
       {destino.tipo === "link" && (
         <p className="mb-4 flex flex-wrap items-center gap-2 text-[13px] text-marinho-2">
-          Editando <span className="font-medium text-marinho">{destino.nome}</span>.
+          <span>
+            Editando <span className="font-medium text-marinho">{destino.nome}</span>
+          </span>
           {personalizados.length > 0 ? (
             <Selo tom="dourado">
               {personalizados.length} {personalizados.length === 1 ? "ajuste próprio" : "ajustes próprios"}
