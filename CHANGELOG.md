@@ -2,6 +2,16 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.7.0] — 2026-09-18
+
+### Adicionado
+
+- Fundo da página livre no editor: cor própria em hexadecimal e imagem de fundo, com ajuste de cobrir, repetir ou no topo, e um véu de 0 a 90 por cento para o texto continuar legível.
+
+### Mudado
+
+- Todos os dropdowns do sistema deixaram de ser `<select>` nativo e passaram a usar um componente próprio, com descrição em cada opção, navegação por setas, Home e End, busca digitando as primeiras letras, e a lista abrindo para cima quando não há espaço embaixo. O visual agora é o mesmo em qualquer sistema operacional e acompanha o tema escuro.
+
 ## [0.6.0] — 2026-09-18
 
 ### Adicionado

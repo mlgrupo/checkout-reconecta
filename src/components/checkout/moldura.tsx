@@ -15,7 +15,7 @@ export function MolduraCheckout({ nomeLoja, emailSuporte, whatsappSuporte, child
   return (
     /* @container: todo o checkout responde à largura deste bloco, não à da janela.
        É o que faz a prévia do editor mostrar o que o cliente vê no celular. */
-    <div className="@container flex min-h-dvh flex-col bg-neve">
+    <div className="@container fundo-pagina flex min-h-dvh flex-col bg-neve">
       <header className="border-b border-gelo bg-branco">
         <div className="mx-auto flex h-16 w-full max-w-[1080px] items-center justify-between gap-3 px-4 @xl:px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}

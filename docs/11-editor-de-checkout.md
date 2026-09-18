@@ -16,7 +16,7 @@ não personalizados do link acompanham sozinhos.
 |------|--------------------|
 | Modelo | **Clássico** (duas colunas, resumo fixo ao lado), **Compacto** (uma coluna, resumo no topo) ou **Focado** (coluna estreita centralizada). |
 | Lado do resumo | Só no clássico: resumo à direita ou à esquerda do formulário. |
-| Fundo | Claro ou escuro. O escuro inverte as superfícies e a tinta, mantendo a cor principal. |
+| Fundo | Tema claro ou escuro, mais cor livre e imagem de fundo com véu. |
 | Ordem dos blocos | Seus dados, pagamento, order bump, garantia e depoimentos em qualquer ordem. A numeração das etapas e a navegação por teclado seguem a ordem escolhida. |
 | Cor principal | Botões, passos numerados, método selecionado, links e foco. As variações de hover e fundo saem dela. |
 | Tipografia | Fonte do checkout inteiro, alinhamento do cabeçalho, tamanho do título, negrito e itálico. |
@@ -45,6 +45,19 @@ usado como texto sobre esse tingimento, fica claro. É o que mantém legível o 
 Duas regras ficam fora das camadas do Tailwind de propósito, em `globals.css`: a cor do texto sobre a cor
 principal e o fundo da pílula do selo Asaas. Regras sem camada vencem as utilitárias, que é o necessário para
 sobrescrever `text-branco` e `bg-marinho` quando o tema inverte os tokens.
+
+## Fundo da página
+
+São duas camadas. O **tema** (claro ou escuro) decide a cor do texto, dos cartões e das bordas, e é o que mantém o
+checkout legível. Por cima dele você escolhe livremente:
+
+- **Cor do fundo**: qualquer hexadecimal. Sem escolher, vale a cor do tema.
+- **Imagem de fundo**: enviada pelo editor, com três ajustes. *Cobrir* preenche a tela e fica fixa na rolagem,
+  *repetir* lado a lado para textura, *no topo* mostra a imagem inteira no alto.
+- **Véu**: uma camada da cor do tema por cima da imagem, de 0 a 90 por cento. É o que evita que uma foto movimentada
+  atrapalhe a leitura.
+
+Os cartões do formulário continuam sólidos, então o conteúdo permanece legível sobre qualquer fundo.
 
 ## Tipografia
 

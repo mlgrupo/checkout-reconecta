@@ -7,13 +7,16 @@ import { MolduraCheckout } from "@/components/checkout/moldura";
 import { TemaCheckout } from "@/components/checkout/tema";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Campo, Entrada, Interruptor, Selecao } from "@/components/ui/field";
+import { Escolha } from "@/components/ui/escolha";
+import { Campo, Entrada, Interruptor } from "@/components/ui/field";
 import { IconeAtualizar, IconeFechar, IconeMais, IconeSeta, IconeUpload } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import {
   ALINHAMENTOS,
   APARENCIA_PADRAO,
   BLOCO_INFO,
+  ESTILO_IMAGEM_INFO,
+  ESTILOS_IMAGEM,
   FUNDOS,
   LADOS,
   MODELO_INFO,
@@ -24,7 +27,7 @@ import {
   type Modelo,
 } from "@/lib/aparencia";
 import { ehHexValido, normalizarHex } from "@/lib/cores";
-import { acharFonte, FONTES } from "@/lib/fontes";
+import { FONTES } from "@/lib/fontes";
 import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import type { CheckoutPublico } from "@/lib/links";
 import { cn } from "@/lib/utils";
@@ -146,6 +149,8 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
   const [a, setA] = useState<Aparencia>(inicial);
   const [salvando, setSalvando] = useState(false);
   const [enviandoBanner, setEnviandoBanner] = useState(false);
+  const [enviandoFundo, setEnviandoFundo] = useState(false);
+  const fundoRef = useRef<HTMLInputElement>(null);
   const [erros, setErros] = useState<Record<string, string>>({});
   const [aba, setAba] = useState<"editar" | "previa">("editar");
   const [larguraPrevia, setLarguraPrevia] = useState<"celular" | "computador">("computador");
@@ -154,22 +159,29 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
   const mudar = <K extends keyof Aparencia>(chave: K, valor: Aparencia[K]) => setA((atual) => ({ ...atual, [chave]: valor }));
   const mudarTipografia = (parcial: Partial<Aparencia["tipografia"]>) =>
     setA((atual) => ({ ...atual, tipografia: { ...atual.tipografia, ...parcial } }));
+  const mudarFundo = (parcial: Partial<Aparencia["fundoPagina"]>) =>
+    setA((atual) => ({ ...atual, fundoPagina: { ...atual.fundoPagina, ...parcial } }));
   const alterado = useMemo(() => JSON.stringify(a) !== JSON.stringify(inicial), [a, inicial]);
 
   const checkoutPrevia: CheckoutPublico = useMemo(() => ({ ...base, aparencia: a }), [base, a]);
 
-  async function enviarBanner(arquivo: File) {
-    setEnviandoBanner(true);
+  /** Envia o arquivo e devolve a URL servida pela plataforma. */
+  async function enviarImagem(arquivo: File, aoTerminar: (url: string) => void) {
+    const ehFundo = aoTerminar !== aplicarBanner;
+    (ehFundo ? setEnviandoFundo : setEnviandoBanner)(true);
     try {
       const form = new FormData();
       form.append("arquivo", arquivo);
       const r = await chamarApi<{ imagem: { url: string } }>("/api/admin/imagens", { method: "POST", body: form });
-      mudar("bannerUrl", r.imagem.url);
+      aoTerminar(r.imagem.url);
     } catch (e) {
       notificar({ tom: "erro", titulo: "Não foi possível enviar a imagem", descricao: (e as Error).message });
     } finally {
-      setEnviandoBanner(false);
+      (ehFundo ? setEnviandoFundo : setEnviandoBanner)(false);
     }
+  }
+  function aplicarBanner(url: string) {
+    mudar("bannerUrl", url);
   }
 
   async function salvar() {
@@ -248,7 +260,10 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
           </Campo>
         )}
 
-        <Campo rotulo="Fundo da página">
+      </Secao>
+
+      <Secao titulo="Fundo da página" descricao="O tema define a cor do texto e dos cartões. Cor e imagem são livres por cima dele.">
+        <Campo rotulo="Tema">
           <div className="grid grid-cols-2 gap-2">
             {FUNDOS.map((f) => (
               <button
@@ -260,14 +275,89 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
                   a.fundo === f ? "border-azul bg-azul-claro/50 text-azul-profundo" : "border-gelo text-marinho-2 hover:border-azul-medio",
                 )}
               >
-                <span
-                  className={cn("h-4 w-4 rounded-[4px] border", f === "escuro" ? "border-marinho bg-marinho" : "border-gelo bg-branco")}
-                />
+                <span className={cn("h-4 w-4 rounded-[4px] border", f === "escuro" ? "border-marinho bg-marinho" : "border-gelo bg-branco")} />
                 {f}
               </button>
             ))}
           </div>
         </Campo>
+
+        <Campo rotulo="Cor do fundo" erro={erros["fundoPagina.cor"]}>
+          {a.fundoPagina.cor ? (
+            <div className="flex flex-col gap-2">
+              <EntradaCor valor={a.fundoPagina.cor} onChange={(v) => mudarFundo({ cor: v })} />
+              <button type="button" onClick={() => mudarFundo({ cor: null })} className="self-start text-[12px] text-azul hover:underline">
+                Voltar à cor do tema
+              </button>
+            </div>
+          ) : (
+            <Button variante="secundario" tamanho="sm" onClick={() => mudarFundo({ cor: a.fundo === "escuro" ? "#0d1017" : "#f5f8ff" })}>
+              Usar uma cor própria
+            </Button>
+          )}
+        </Campo>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-medium text-marinho">Imagem de fundo</span>
+          {a.fundoPagina.imagemUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={a.fundoPagina.imagemUrl} alt="" className="h-24 w-full rounded-panel border border-gelo object-cover" />
+          )}
+          <input
+            ref={fundoRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void enviarImagem(f, (url) => mudarFundo({ imagemUrl: url }));
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button variante="secundario" tamanho="sm" icone={<IconeUpload tamanho={15} />} carregando={enviandoFundo} onClick={() => fundoRef.current?.click()}>
+              {a.fundoPagina.imagemUrl ? "Trocar imagem" : "Enviar imagem"}
+            </Button>
+            {a.fundoPagina.imagemUrl && (
+              <Button variante="fantasma" tamanho="sm" onClick={() => mudarFundo({ imagemUrl: null })}>
+                Remover
+              </Button>
+            )}
+          </div>
+          {erros["fundoPagina.imagemUrl"] && <p className="text-[13px] text-bordo">{erros["fundoPagina.imagemUrl"]}</p>}
+        </div>
+
+        {a.fundoPagina.imagemUrl && (
+          <>
+            <Campo rotulo="Como a imagem se ajusta">
+              <Escolha
+                valor={a.fundoPagina.imagemEstilo}
+                onChange={(v) => mudarFundo({ imagemEstilo: v })}
+                opcoes={ESTILOS_IMAGEM.map((e) => ({
+                  valor: e,
+                  rotulo: ESTILO_IMAGEM_INFO[e].rotulo,
+                  descricao: ESTILO_IMAGEM_INFO[e].descricao,
+                }))}
+              />
+            </Campo>
+            <Campo
+              rotulo={`Véu sobre a imagem: ${a.fundoPagina.veu}%`}
+              htmlFor="f-veu"
+              dica="Uma camada da cor do tema por cima da imagem. Ajuda o texto a continuar legível."
+            >
+              <input
+                id="f-veu"
+                type="range"
+                min={0}
+                max={90}
+                step={5}
+                value={a.fundoPagina.veu}
+                onChange={(e) => mudarFundo({ veu: Number(e.target.value) })}
+                className="w-full accent-azul"
+              />
+            </Campo>
+          </>
+        )}
       </Secao>
 
       <Secao titulo="Ordem dos blocos" descricao="Vale também para a navegação por teclado. O botão de pagar fica sempre no fim.">
@@ -314,19 +404,22 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
 
       <Secao titulo="Tipografia" descricao="A fonte vale para o checkout inteiro. O resto é do título e do subtítulo.">
         <Campo rotulo="Fonte" htmlFor="t-fonte" erro={erros["tipografia.fonte"]}>
-          <Selecao id="t-fonte" value={a.tipografia.fonte} onChange={(e) => mudarTipografia({ fonte: e.target.value })}>
-            {FONTES.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.nome}
-              </option>
-            ))}
-          </Selecao>
+          <Escolha
+            id="t-fonte"
+            valor={a.tipografia.fonte}
+            onChange={(v) => mudarTipografia({ fonte: v })}
+            opcoes={FONTES.map((f) => ({
+              valor: f.id,
+              rotulo: f.nome,
+              descricao: f.google ? "Carregada do Google Fonts" : "Já vem com a plataforma",
+              icone: (
+                <span className="w-7 shrink-0 text-center text-[15px] leading-none text-marinho-2" style={{ fontFamily: f.familia }}>
+                  {f.amostra}
+                </span>
+              ),
+            }))}
+          />
         </Campo>
-        {acharFonte(a.tipografia.fonte).google && (
-          <p className="text-[12px] text-marinho-3">
-            Esta fonte é carregada do Google Fonts, o que soma uma requisição à página de pagamento.
-          </p>
-        )}
 
         <Campo rotulo="Alinhamento">
           <div className="grid grid-cols-3 gap-2">
@@ -408,7 +501,7 @@ export function EditorAparencia({ inicial, destino, base, personalizados = [] }:
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) void enviarBanner(f);
+              if (f) void enviarImagem(f, aplicarBanner);
               e.target.value = "";
             }}
           />

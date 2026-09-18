@@ -6,7 +6,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Painel } from "@/components/ui/card";
-import { Campo, Entrada, Selecao } from "@/components/ui/field";
+import { DemoEscolha } from "@/components/dev/demo-escolha";
+import { Campo, Entrada } from "@/components/ui/field";
 import { IconeChave, IconeMais } from "@/components/ui/icons";
 import type { UsuarioSessao } from "@/lib/auth/session";
 
@@ -85,12 +86,8 @@ export default function PaginaGaleria() {
               <Campo rotulo="E-mail" htmlFor="g-email" erro="Informe um e-mail válido.">
                 <Entrada id="g-email" type="email" defaultValue="ana@reconecta" aria-invalid />
               </Campo>
-              <Campo rotulo="Papel" htmlFor="g-papel" opcional>
-                <Selecao id="g-papel" defaultValue="operador">
-                  <option value="admin">Administrador</option>
-                  <option value="operador">Operador</option>
-                  <option value="leitura">Somente leitura</option>
-                </Selecao>
+              <Campo rotulo="Papel" htmlFor="g-papel" opcional dica="Dropdown com teclado, busca por letra e descrição em cada opção.">
+                <DemoEscolha />
               </Campo>
             </div>
           </Painel>

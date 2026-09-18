@@ -6,7 +6,8 @@ import type { ProdutoLista } from "@/components/produtos/tipos";
 import { Button } from "@/components/ui/button";
 import { Gaveta } from "@/components/ui/drawer";
 import { EntradaDinheiro } from "@/components/ui/entrada-dinheiro";
-import { Campo, Entrada, Interruptor, Selecao } from "@/components/ui/field";
+import { Escolha } from "@/components/ui/escolha";
+import { Campo, Entrada, Interruptor } from "@/components/ui/field";
 import { IconeLixeira } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import { METODOS, type Metodo } from "@/lib/dominio";
@@ -129,14 +130,18 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
           </Campo>
 
           <Campo rotulo="Produto principal" htmlFor="l-produto" erro={erros.produtoId}>
-            <Selecao id="l-produto" value={produtoId} onChange={(e) => setProdutoId(e.target.value)} aria-invalid={Boolean(erros.produtoId)}>
-              <option value="">Escolha um produto</option>
-              {produtos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} · {dinheiro(p.precoCentavos)}{p.ativo ? "" : " (inativo)"}
-                </option>
-              ))}
-            </Selecao>
+            <Escolha
+              id="l-produto"
+              valor={produtoId}
+              onChange={setProdutoId}
+              placeholder="Escolha um produto"
+              aria-invalid={Boolean(erros.produtoId)}
+              opcoes={produtos.map((p) => ({
+                valor: p.id,
+                rotulo: p.nome,
+                descricao: `${dinheiro(p.precoCentavos)}${p.ativo ? "" : " · inativo"}`,
+              }))}
+            />
           </Campo>
 
           <Campo rotulo="Código da URL" htmlFor="l-codigo" opcional erro={erros.codigo} dica="Deixe em branco para gerar automaticamente. Só letras minúsculas, números e hífen.">
@@ -155,16 +160,17 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
             </p>
           </div>
           <Campo rotulo="Produto do order bump" htmlFor="l-bump" erro={erros.bumpProdutoId}>
-            <Selecao id="l-bump" value={bumpProdutoId} onChange={(e) => setBumpProdutoId(e.target.value)}>
-              <option value="">Sem order bump</option>
-              {produtos
-                .filter((p) => p.id !== produtoId)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome} · {dinheiro(p.precoCentavos)}
-                  </option>
-                ))}
-            </Selecao>
+            <Escolha
+              id="l-bump"
+              valor={bumpProdutoId}
+              onChange={setBumpProdutoId}
+              opcoes={[
+                { valor: "", rotulo: "Sem order bump", descricao: "O checkout mostra só o produto principal." },
+                ...produtos
+                  .filter((p) => p.id !== produtoId)
+                  .map((p) => ({ valor: p.id, rotulo: p.nome, descricao: dinheiro(p.precoCentavos) })),
+              ]}
+            />
           </Campo>
           {bumpProdutoId && (
             <>
@@ -219,13 +225,16 @@ export function FormularioLink({ aberta, link, produtos, podeExcluir, onFechar, 
 
           {metodos.includes("cartao") && (
             <Campo rotulo="Parcelamento máximo no cartão" htmlFor="l-parcelas" erro={erros.parcelasMax} dica="As taxas de parcelamento seguem a configuração da sua conta Asaas.">
-              <Selecao id="l-parcelas" value={parcelasMax} onChange={(e) => setParcelasMax(Number(e.target.value))}>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {n === 1 ? "À vista" : `Até ${n}x${produtoPrincipal ? ` de ${dinheiro(Math.ceil(produtoPrincipal.precoCentavos / n))}` : ""}`}
-                  </option>
-                ))}
-              </Selecao>
+              <Escolha
+                id="l-parcelas"
+                valor={parcelasMax}
+                onChange={setParcelasMax}
+                opcoes={Array.from({ length: 12 }, (_, i) => i + 1).map((n) => ({
+                  valor: n,
+                  rotulo: n === 1 ? "À vista" : `Até ${n}x`,
+                  descricao: n > 1 && produtoPrincipal ? `${dinheiro(Math.ceil(produtoPrincipal.precoCentavos / n))} por parcela` : undefined,
+                }))}
+              />
             </Campo>
           )}
 

@@ -7,7 +7,8 @@ import { CabecalhoPagina } from "@/components/shell/cabecalho-pagina";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EstadoVazio, Painel } from "@/components/ui/card";
-import { Entrada, Selecao } from "@/components/ui/field";
+import { Escolha } from "@/components/ui/escolha";
+import { Entrada } from "@/components/ui/field";
 import { IconeAtualizar, IconeBusca, IconeCheckout } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { STATUS_PEDIDO, type StatusPedido } from "@/lib/dominio";
@@ -74,15 +75,16 @@ export function GestorDePedidos({ podeSimular }: { podeSimular: boolean }) {
             <IconeBusca tamanho={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-marinho-3" />
             <Entrada type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome, e-mail, CPF, nº do pedido ou id da cobrança" aria-label="Buscar pedidos" className="pl-9" />
           </div>
-          <div className="w-44">
-            <Selecao value={consulta.status} onChange={(e) => consultar({ status: e.target.value as StatusPedido | "", pagina: 0 })} aria-label="Filtrar por status">
-              <option value="">Todos os status</option>
-              {STATUS_PEDIDO.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_UI[s].rotulo}
-                </option>
-              ))}
-            </Selecao>
+          <div className="w-48">
+            <Escolha
+              valor={consulta.status}
+              onChange={(v) => consultar({ status: v as StatusPedido | "", pagina: 0 })}
+              aria-label="Filtrar por status"
+              opcoes={[
+                { valor: "", rotulo: "Todos os status" },
+                ...STATUS_PEDIDO.map((s) => ({ valor: s as string, rotulo: STATUS_UI[s].rotulo })),
+              ]}
+            />
           </div>
           <Button variante="fantasma" tamanho="sm" icone={<IconeAtualizar tamanho={15} />} onClick={recarregar} disabled={carregando}>
             Atualizar

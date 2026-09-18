@@ -30,6 +30,20 @@ export function TemaCheckout({
     variaveis.fontFamily = fonte.familia;
   }
 
+  // Fundo livre: cor própria e imagem, com um véu na cor do tema para o texto continuar legível.
+  const fp = aparencia.fundoPagina;
+  if (fp.cor) variaveis["--color-neve"] = fp.cor;
+  if (fp.imagemUrl) {
+    const veu = Math.min(90, Math.max(0, fp.veu)) / 100;
+    const tinta = escuro ? "13 16 23" : "255 255 255";
+    const camadaVeu = veu > 0 ? `linear-gradient(rgb(${tinta} / ${veu}), rgb(${tinta} / ${veu})), ` : "";
+    variaveis["--fundo-imagem"] = `${camadaVeu}url("${fp.imagemUrl.replace(/"/g, "%22")}")`;
+    variaveis["--fundo-tamanho"] = fp.imagemEstilo === "cobrir" ? "cover" : fp.imagemEstilo === "topo" ? "100% auto" : "auto";
+    variaveis["--fundo-repeticao"] = fp.imagemEstilo === "repetir" ? "repeat" : "no-repeat";
+    variaveis["--fundo-posicao"] = fp.imagemEstilo === "topo" ? "top center" : "center";
+    variaveis["--fundo-fixacao"] = fp.imagemEstilo === "cobrir" ? "fixed" : "scroll";
+  }
+
   const folhaDaFonte = urlDaFonte(fonte.id);
 
   return (

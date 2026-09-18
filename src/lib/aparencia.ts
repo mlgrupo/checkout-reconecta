@@ -53,12 +53,34 @@ export type Tipografia = {
 export const FUNDOS = ["claro", "escuro"] as const;
 export type Fundo = (typeof FUNDOS)[number];
 
+export const ESTILOS_IMAGEM = ["cobrir", "repetir", "topo"] as const;
+export type EstiloImagem = (typeof ESTILOS_IMAGEM)[number];
+
+export const ESTILO_IMAGEM_INFO: Record<EstiloImagem, { rotulo: string; descricao: string }> = {
+  cobrir: { rotulo: "Cobrir", descricao: "A imagem preenche a tela inteira, cortando o excesso." },
+  repetir: { rotulo: "Repetir", descricao: "A imagem se repete lado a lado, boa para textura." },
+  topo: { rotulo: "No topo", descricao: "A imagem aparece inteira no alto, sem cortes." },
+};
+
+/**
+ * Fundo da página, por cima do tema claro ou escuro.
+ * Sem cor e sem imagem, vale o fundo padrão do tema.
+ */
+export type FundoPagina = {
+  cor: string | null;
+  imagemUrl: string | null;
+  imagemEstilo: EstiloImagem;
+  /** Quanto o véu do tema cobre a imagem, de 0 a 90 por cento. */
+  veu: number;
+};
+
 export const LADOS = ["direita", "esquerda"] as const;
 export type LadoResumo = (typeof LADOS)[number];
 
 export type Aparencia = {
   modelo: Modelo;
   fundo: Fundo;
+  fundoPagina: FundoPagina;
   ladoResumo: LadoResumo;
   ordem: Bloco[];
   tipografia: Tipografia;
@@ -77,6 +99,7 @@ export type AparenciaParcial = Partial<Aparencia>;
 export const APARENCIA_PADRAO: Aparencia = {
   modelo: "classico",
   fundo: "claro",
+  fundoPagina: { cor: null, imagemUrl: null, imagemEstilo: "cobrir", veu: 0 },
   ladoResumo: "direita",
   ordem: [...BLOCOS],
   tipografia: { fonte: "sistema", alinhamento: "esquerda", tituloTamanho: 30, tituloNegrito: true, tituloItalico: false },
@@ -134,6 +157,17 @@ const textoOpcional = (max: number) =>
 export const schemaAparencia = z.object({
   modelo: z.enum(MODELOS).optional(),
   fundo: z.enum(FUNDOS).optional(),
+  fundoPagina: z
+    .object({
+      cor: z
+        .union([z.literal(""), z.string().refine(ehHexValido, "Use uma cor em hexadecimal, como #0B3DFF.")])
+        .nullable()
+        .transform((v) => (v ? v : null)),
+      imagemUrl: z.union([z.literal(""), z.string().trim().max(500)]).nullable().transform((v) => (v ? v : null)),
+      imagemEstilo: z.enum(ESTILOS_IMAGEM),
+      veu: z.number().int().min(0).max(90),
+    })
+    .optional(),
   ladoResumo: z.enum(LADOS).optional(),
   tipografia: z
     .object({

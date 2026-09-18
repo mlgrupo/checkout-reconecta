@@ -195,6 +195,16 @@
   background-color: #0a1633;
 }
 
+/* Fundo da página do checkout: cor do tema, ou a cor e a imagem escolhidas no editor. */
+.tema-checkout .fundo-pagina {
+  background-color: var(--color-neve);
+  background-image: var(--fundo-imagem, none);
+  background-size: var(--fundo-tamanho, cover);
+  background-position: var(--fundo-posicao, center);
+  background-repeat: var(--fundo-repeticao, no-repeat);
+  background-attachment: var(--fundo-fixacao, scroll);
+}
+
 .tema-escuro .shadow-card {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.5);
 }

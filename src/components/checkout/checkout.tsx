@@ -5,7 +5,8 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "
 import { BandeirasAceitas } from "@/components/checkout/bandeiras";
 import { BannerCheckout, CabecalhoOferta, Cronometro, Depoimentos, Garantia } from "@/components/checkout/blocos";
 import { Button } from "@/components/ui/button";
-import { Campo, Entrada, Selecao } from "@/components/ui/field";
+import { Escolha } from "@/components/ui/escolha";
+import { Campo, Entrada } from "@/components/ui/field";
 import { IconeBoleto, IconeCadeado, IconeCheck, IconeCheckout, IconePix } from "@/components/ui/icons";
 import type { Bloco } from "@/lib/aparencia";
 import { cvvEsperado, detectarBandeira, digitosEsperados } from "@/lib/bandeiras";
@@ -355,13 +356,16 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
               </div>
               {checkout.parcelasMax > 1 && (
                 <Campo rotulo="Parcelas" htmlFor="c-parcelas" className="@xl:col-span-2">
-                  <Selecao id="c-parcelas" value={parcelas} onChange={(e) => setParcelas(Number(e.target.value))}>
-                    {Array.from({ length: checkout.parcelasMax }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={n}>
-                        {n === 1 ? `À vista ${dinheiro(total)}` : `${n}x de ${dinheiro(Math.ceil(total / n))}`}
-                      </option>
-                    ))}
-                  </Selecao>
+                  <Escolha
+                    id="c-parcelas"
+                    valor={parcelas}
+                    onChange={setParcelas}
+                    opcoes={Array.from({ length: checkout.parcelasMax }, (_, i) => i + 1).map((n) => ({
+                      valor: n,
+                      rotulo: n === 1 ? `À vista ${dinheiro(total)}` : `${n}x de ${dinheiro(Math.ceil(total / n))}`,
+                      descricao: n === 1 ? undefined : `Total ${dinheiro(total)}`,
+                    }))}
+                  />
                 </Campo>
               )}
             </div>
