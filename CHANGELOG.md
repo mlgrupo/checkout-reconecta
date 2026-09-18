@@ -4,6 +4,10 @@ Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a C
 
 ## [0.2.1] — 2026-09-18
 
+### Corrigido
+
+- Proxy resiliente: sem credenciais do Auth0 (ou com o tenant fora do ar) o middleware lançava e todas as rotas respondiam 500, inclusive o checkout público, o webhook do Asaas e o healthcheck. Agora as rotas públicas passam direto e as demais seguem sem sessão.
+
 ### Adicionado
 
 - `ASAAS_WEBHOOK_BASE_URL` para apontar o webhook a uma URL pública diferente de `APP_BASE_URL` (túnel ou host separado).
