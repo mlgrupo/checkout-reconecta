@@ -2,6 +2,12 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.8.1] — 2026-09-18
+
+### Corrigido
+
+- A prévia do editor no modo celular ficava encostada à esquerda, sobrando espaço vazio ao lado. Agora fica centralizada.
+
 ## [0.8.0] — 2026-09-18
 
 ### Adicionado
