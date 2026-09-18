@@ -12,6 +12,7 @@ export const metadata: Metadata = { title: "Entrar" };
 const mensagensDeErro: Record<string, string> = {
   "access_denied": "Seu acesso foi negado. Fale com um administrador da Reconecta.",
   "sessao-expirada": "Sua sessão expirou. Entre novamente.",
+  "auth0-indisponivel": "O serviço de login está indisponível no momento. Tente de novo em alguns minutos.",
 };
 
 export default async function PaginaEntrar({
