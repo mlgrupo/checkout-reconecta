@@ -575,8 +575,9 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
   );
 
   const notaSegura = (
-    <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-marinho-3">
-      <IconeCadeado tamanho={14} className="shrink-0 text-azul" />
+    /* O cadeado acompanha o texto em vez de ser item de flex: assim ele não se descola quando a frase quebra. */
+    <p className="text-center text-[12px] leading-relaxed text-marinho-3">
+      <IconeCadeado tamanho={13} className="mr-1 inline-block align-[-2px] text-azul" />
       Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
     </p>
   );
@@ -591,7 +592,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
     const precoApoio = parcelado
       ? `ou ${dinheiro(total)} à vista`
       : checkout.metodos.includes("cartao") && maior.numero > 1
-        ? `ou em até ${maior.numero}x de ${dinheiro(maior.parcelaCentavos)}`
+        ? `ou em até ${maior.numero}x de ${dinheiro(maior.parcelaCentavos)}${maior.comJuros ? " com juros" : " sem juros"}`
         : null;
 
     return (
