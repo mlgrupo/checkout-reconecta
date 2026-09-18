@@ -35,7 +35,49 @@ As migrações em `drizzle/` são aplicadas automaticamente quando o servidor so
 
 Valores monetários são **inteiros em centavos**. Datas com fuso (`timestamptz`).
 
-## Deploy no Railway
+## Ambiente no Railway (já criado)
+
+| Item | Valor |
+|------|-------|
+| Projeto | **Conectar Whatsapp Reconecta** (`db9aa2bd-b09f-4bd8-b62f-d6d9e2ca3e09`) |
+| Ambiente | `production` (`1f33b7e4-6b3f-4443-b151-ef447a8db259`) |
+| Serviço da aplicação | **checkout-reconecta** (`bb3a439c-0622-44dd-9cbb-77f2d710612b`) |
+| Banco | **Postgres** (`e8005a81-166d-45fd-93ec-1bf4b6ba266d`), no mesmo projeto |
+| URL pública | <https://checkout-reconecta-production.up.railway.app> |
+| Webhook para o Asaas | `https://checkout-reconecta-production.up.railway.app/api/asaas/webhook` |
+| Saúde | `https://checkout-reconecta-production.up.railway.app/api/saude` |
+
+### Variáveis já configuradas no serviço
+
+`NODE_ENV`, `APP_BASE_URL`, `DATABASE_URL` (referência `${{Postgres.DATABASE_URL}}`), `AUTH0_SECRET` (gerado),
+`AUTH0_CONNECTION`, `AUTH0_ROLES_CLAIM`, `ASAAS_ENV=simulacao`, `ASAAS_WEBHOOK_TOKEN` (gerado),
+`ASAAS_CREDENTIALS_ENC_KEY` (gerado).
+
+### Variáveis que faltam preencher
+
+Adicione pelo painel do Railway (Variables → New Variable, ou Raw Editor) quando tiver cada credencial:
+
+```
+AUTH0_DOMAIN=
+AUTH0_CLIENT_ID=
+AUTH0_CLIENT_SECRET=
+AUTH0_MGMT_CLIENT_ID=
+AUTH0_MGMT_CLIENT_SECRET=
+ASAAS_API_KEY=
+NEXT_PUBLIC_GTM_ID=
+```
+
+Ao colar a chave do Asaas, troque também `ASAAS_ENV` para `sandbox` (e depois `production`).
+No Auth0, as URLs desta instalação são `https://checkout-reconecta-production.up.railway.app/auth/callback`
+(callback) e a raiz do domínio (logout e web origin).
+
+### Deploy automático
+
+O primeiro deploy foi feito pela CLI (`railway up`). Para cada push em `main` gerar um deploy sozinho, conecte o
+repositório em **Settings → Source → Connect Repo** → `mlgrupo/checkout-reconecta`, branch `main`. As variáveis e o
+domínio continuam os mesmos.
+
+## Deploy no Railway (do zero)
 
 O repositório já traz `railway.json` (build com pnpm, start `pnpm start`, healthcheck em `/api/saude`).
 O Next escuta na porta que o Railway injeta em `PORT`.
