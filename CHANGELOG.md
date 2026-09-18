@@ -2,6 +2,22 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.2.2] — 2026-09-18
+
+### Adicionado
+
+- `/api/saude` informa se a chave do Asaas, o Auth0 e o token do webhook estão configurados (só booleanos).
+- Aviso no boot quando `ASAAS_ENV` é sandbox ou produção mas a chave chegou vazia, com a dica do escape.
+- Log do motivo real quando o Asaas recusa um pedido; antes virava só um 502 genérico.
+
+### Corrigido
+
+- Documentada a armadilha do cifrão: a chave do Asaas começa com `$` e, em arquivos `.env`, o carregador do Next a apagava silenciosamente. É preciso escapar com barra invertida.
+
+### Verificado
+
+- Teste de ponta a ponta contra o sandbox real do Asaas: Pix com order bump em cobrança única, QR Code válido por 1 ano, confirmação virando pagamento na plataforma, boleto com linha digitável, cartão aprovado em 3x e cartão recusado. Detalhes em `docs/06`.
+
 ## [0.2.1] — 2026-09-18
 
 ### Corrigido

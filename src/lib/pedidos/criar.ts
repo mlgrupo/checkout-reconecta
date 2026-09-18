@@ -177,6 +177,12 @@ export async function criarPedido(dados: DadosNovoPedido): Promise<ResultadoPedi
     const final = await aplicarCobranca(comCobranca, cobranca, "criação");
     return { pedido: final, itens: itensCriados };
   } catch (e) {
+    // Sem este log, uma falha do Asaas vira só um 502 genérico para o pagador.
+    if (e instanceof ErroAsaas) {
+      console.error(`[pedidos] Asaas recusou o pedido ${pedido.id}: ${e.status} ${e.message}`, e.erros, e.detalhe);
+    } else {
+      console.error(`[pedidos] falha ao criar cobrança do pedido ${pedido.id}:`, e);
+    }
     // Cartão recusado: o pedido fica registrado como recusado e o pagador pode tentar de novo.
     if (e instanceof ErroAsaas && dados.metodo === "cartao" && e.status === 400) {
       await db.update(pedidos).set({ status: "recusado", asaasStatus: "REFUSED", atualizadoEm: new Date() }).where(eq(pedidos.id, pedido.id));

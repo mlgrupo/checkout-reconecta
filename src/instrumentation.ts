@@ -16,4 +16,12 @@ export async function register() {
   } catch (e) {
     console.error("[db] falha ao conectar ou migrar:", e);
   }
+
+  const { env, prontidao } = await import("@/lib/env");
+  if (env.ASAAS_ENV !== "simulacao" && !prontidao.asaasReal) {
+    console.warn(
+      `[asaas] ASAAS_ENV=${env.ASAAS_ENV} mas ASAAS_API_KEY está vazia. Se ela veio de um arquivo .env, ` +
+        "escape o cifrão inicial com barra invertida (ASAAS_API_KEY=\\$aact_...); sem isso o valor é apagado na leitura.",
+    );
+  }
 }

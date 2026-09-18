@@ -42,6 +42,18 @@ valor real circula. Use a mesma razão social da conta de produção para os tes
 - Sandbox e produção têm chaves diferentes. A do sandbox começa com `$aact_hmlg_`.
 - Dá para nomear, definir validade, desativar e apagar chaves. Cada conta guarda até 10.
 
+> **Armadilha do cifrão.** A chave do Asaas começa com `$`. Dentro de um arquivo `.env`, o carregador do Next
+> (dotenv com expansão de variáveis) entende `$aact_hmlg_...` como o nome de uma variável, não encontra nada e
+> **grava vazio, sem erro nenhum**. Aspas simples ou duplas não resolvem. A única forma que funciona é escapar
+> cada cifrão com barra invertida:
+>
+> ```
+> ASAAS_API_KEY=\$aact_hmlg_000MzkwODA2...
+> ```
+>
+> Em painéis de variáveis (Railway, Vercel) cole o valor original, sem escapar: lá não passa por dotenv.
+> Para conferir se a chave chegou, veja `asaasChave` em `/api/saude`.
+
 ### 3. `ASAAS_ENV`
 
 Não vem do Asaas, é da nossa plataforma: `simulacao` (sem chave), `sandbox` ou `production`. Troque junto com a chave.
@@ -163,13 +175,30 @@ Na simulação, números terminados em `0000` também são recusados.
 - Os dados de cliente do Asaas são reaproveitados por CPF/CNPJ; nome e e-mail do pedido ficam no nosso banco.
 - Split e subcontas não estão implementados: dependem das condições da parceria.
 
+## Teste de ponta a ponta feito em 18/09/2026
+
+Contra a conta sandbox real, com a plataforma rodando local e `ASAAS_ENV=sandbox`:
+
+| Verificação | Resultado |
+|-------------|-----------|
+| Pix com order bump | Uma cobrança de R$ 544,00 com os dois itens registrados |
+| QR Code | Veio do Asaas (`00020101021226820014br.gov.bcb.pix...`), com imagem e validade de 1 ano |
+| Cobrança no Asaas | Encontrada pelo `externalReference` do pedido, tipo PIX, status PENDING |
+| Confirmação no sandbox | `POST /sandbox/payment/{id}/confirm` → o pedido virou **pago** na plataforma |
+| Boleto | Linha digitável real de 47 dígitos, vencimento em 3 dias, valor sem o bump |
+| Cartão aprovado em 3x | Pago na hora, bandeira e últimos dígitos gravados |
+| Cartão recusado | 402 com a mensagem do próprio Asaas |
+| Dados inválidos | 400 apontando cada campo |
+
+A validade de 1 ano do QR Code só apareceu depois de cadastrar a chave Pix; antes disso expirava no mesmo dia.
+
 ## Checklist para receber a chave do sandbox
 
-- [ ] `ASAAS_ENV=sandbox` e `ASAAS_API_KEY` no `.env`.
-- [ ] Criar um pedido Pix pelo checkout e conferir a cobrança no painel do Asaas.
-- [ ] Clicar em **Simular pagamento** no pedido e ver o status virar pago.
-- [ ] Subir para uma URL pública (túnel ou Railway) e registrar o webhook.
-- [ ] Repetir com boleto e cartão aprovado/recusado.
+- [x] `ASAAS_ENV=sandbox` e `ASAAS_API_KEY` configurados (lembrando de escapar o cifrão em arquivos `.env`).
+- [x] Chave Pix cadastrada na conta recebedora.
+- [x] Webhook registrado apontando para a URL pública.
+- [x] Pedido Pix, boleto, cartão aprovado e cartão recusado testados de ponta a ponta.
+- [ ] Repetir o teste com a URL pública recebendo o webhook de verdade (depende de um pedido criado em produção).
 
 ## Materiais recebidos
 
