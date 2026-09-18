@@ -17,6 +17,21 @@ Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a C
 - Ao Asaas vai `totalValue` já com juros, e ele distribui os centavos que sobram entre as parcelas.
 - Painel, lista de pedidos e o evento `purchase` passaram a mostrar o total cobrado. O detalhe do pedido abre a conta entre produtos e juros.
 
+### Verificado
+
+Teste de ponta a ponta no ambiente do Railway, contra o sandbox real do Asaas, com um link de até 12x, 3x sem juros e 2,99% ao mês, sobre R$ 497,00 mais um order bump de R$ 47,00:
+
+| Caso | Itens | Juros | Cobrado | Resultado |
+|------|------:|------:|--------:|-----------|
+| Cartão 6x com bump | R$ 544,00 | R$ 58,34 | R$ 602,34 | Pago, 6 parcelas de R$ 100,39 no Asaas |
+| Cartão 12x com bump | R$ 544,00 | R$ 111,44 | R$ 655,44 | Pago |
+| Cartão 3x sem bump | R$ 497,00 | — | R$ 497,00 | Pago, sem juros |
+| Cartão à vista com bump | R$ 544,00 | — | R$ 544,00 | Pago |
+| Pix com bump | R$ 544,00 | — | R$ 544,00 | Aguardando |
+| Boleto sem bump | R$ 497,00 | — | R$ 497,00 | Aguardando |
+
+No Asaas, a cobrança de 6x virou um parcelamento com seis parcelas de R$ 100,39, somando exatamente o total mostrado no botão.
+
 ## [0.8.1] — 2026-09-18
 
 ### Corrigido
