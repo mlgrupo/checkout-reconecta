@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BandeiraDetectada, BandeirasAceitas } from "@/components/checkout/bandeiras";
+import { BandeirasAceitas } from "@/components/checkout/bandeiras";
 import { BannerCheckout, CabecalhoOferta, Cronometro, Depoimentos, Garantia } from "@/components/checkout/blocos";
 import { Button } from "@/components/ui/button";
 import { Campo, Entrada, Selecao } from "@/components/ui/field";
@@ -304,12 +304,6 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
             })}
           </div>
 
-          {metodosDisponiveis.includes("cartao") && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-[12px] text-marinho-3">Aceitamos</span>
-              <BandeirasAceitas ativa={metodo === "cartao" ? (bandeira?.id ?? null) : null} />
-            </div>
-          )}
 
           {metodo === "pix" && (
             <p className="mt-4 rounded-panel border border-gelo bg-neve px-4 py-3 text-[13px] text-marinho-2">
@@ -324,7 +318,8 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
           {metodo === "cartao" && (
             <div className="mt-4 grid grid-cols-1 gap-4 @xl:grid-cols-2">
               <Campo rotulo="Número do cartão" htmlFor="c-numero" erro={erro("numero", errosCartao.numero)} className="@xl:col-span-2">
-                <div className="relative">
+                {/* As bandeiras ficam sob o campo e continuam visíveis mesmo com erro. */}
+                <div className="flex flex-col gap-2">
                   <Entrada
                     id="c-numero"
                     inputMode="numeric"
@@ -334,9 +329,8 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
                     onBlur={() => tocar("numero")}
                     placeholder="0000 0000 0000 0000"
                     aria-invalid={Boolean(erro("numero", errosCartao.numero))}
-                    className={bandeira ? "pr-14" : undefined}
                   />
-                  <BandeiraDetectada bandeira={bandeira} />
+                  <BandeirasAceitas detectada={bandeira?.id ?? null} />
                 </div>
               </Campo>
               <Campo rotulo="Nome impresso no cartão" htmlFor="c-nome" erro={erro("nomeCartao", errosCartao.nome)} className="@xl:col-span-2">

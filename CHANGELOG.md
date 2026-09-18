@@ -10,7 +10,7 @@ Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a C
 - Fundo claro ou escuro, invertendo as superfícies e a tinta sem perder a cor principal.
 - Lado do resumo configurável no modelo clássico.
 - Ordem dos blocos editável (dados, pagamento, order bump, garantia, depoimentos). A numeração das etapas e a navegação por teclado seguem a ordem escolhida.
-- Bandeiras de cartão: selos das aceitas abaixo do seletor de método, destaque da bandeira detectada dentro do campo e validação de dígitos e CVV por bandeira.
+- Bandeiras de cartão: as nove aceitas ficam em cinza abaixo do campo do número e só a detectada ganha cor, conforme a pessoa digita. A bandeira também define os dígitos esperados e o tamanho do CVV.
 - Logo oficial da Reconecta e símbolo instalados em `public/brand/`.
 
 ### Corrigido

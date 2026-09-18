@@ -34,7 +34,17 @@ export const BANDEIRAS: Bandeira[] = [
 ];
 
 /** Ordem de exibição dos selos no checkout: as mais usadas no Brasil primeiro. */
-export const BANDEIRAS_EXIBIDAS = ["visa", "mastercard", "elo", "american-express", "hipercard", "diners-club"] as const;
+export const BANDEIRAS_EXIBIDAS = [
+  "visa",
+  "mastercard",
+  "elo",
+  "american-express",
+  "hipercard",
+  "diners-club",
+  "discover",
+  "jcb",
+  "aura",
+] as const;
 
 export function detectarBandeira(numero: string): Bandeira | null {
   const d = numero.replace(/\D/g, "");

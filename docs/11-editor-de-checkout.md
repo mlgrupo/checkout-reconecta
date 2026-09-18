@@ -47,10 +47,13 @@ sobrescrever `text-branco` e `bg-marinho` quando o tema inverte os tokens.
 
 ## Bandeiras de cartão
 
-As bandeiras aceitas aparecem abaixo do seletor de método e a detectada é destacada dentro do campo do número,
-conforme a pessoa digita. A detecção usa as faixas de BIN em `src/lib/bandeiras.ts`, com Elo e Hipercard testados
-antes de Visa, Mastercard e Discover, porque suas faixas se sobrepõem. A bandeira também define quantos dígitos o
-número deve ter e se o CVV tem 3 ou 4 casas. Os arquivos ficam em `public/brand/bandeiras/`.
+As nove bandeiras aceitas ficam logo abaixo do campo do número, todas em cinza. Assim que os primeiros dígitos
+revelam a bandeira, só ela ganha cor e as outras se apagam. A detecção usa as faixas de BIN em
+`src/lib/bandeiras.ts`, com Elo e Hipercard testados antes de Visa, Mastercard e Discover, porque suas faixas se
+sobrepõem. A bandeira também define quantos dígitos o número deve ter e se o CVV tem 3 ou 4 casas.
+
+Os arquivos ficam em `public/brand/bandeiras/icon-{id}.svg`. Para acrescentar uma bandeira, coloque o arquivo com
+esse nome, adicione a faixa em `BANDEIRAS` e o id em `BANDEIRAS_EXIBIDAS`.
 
 ## A prévia
 
