@@ -3,6 +3,8 @@ import { alias } from "drizzle-orm/pg-core";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { obterDb } from "@/db";
 import { linksCheckout, METODOS, pedidos, produtos, type LinkCheckout, type Metodo } from "@/db/schema";
+import { lerAparencia, mesclarAparencia, type Aparencia, type AparenciaParcial } from "@/lib/aparencia";
+import { obterAparenciaLoja } from "@/lib/configuracoes";
 import { env } from "@/lib/env";
 import { codigoCurto } from "@/lib/formato";
 import { ErroDominio, urlImagemProduto } from "@/lib/produtos";
@@ -139,6 +141,20 @@ export async function atualizarLink(id: string, dados: Partial<DadosLink>) {
   return atualizado;
 }
 
+/** Grava a personalização do link. `null` faz o link voltar a herdar tudo da loja. */
+export async function salvarAparenciaDoLink(id: string, parcial: AparenciaParcial | null) {
+  const db = await obterDb();
+  const atual = await obterLink(id);
+  if (!atual) throw new ErroDominio("Link não encontrado.", 404);
+  const valor = parcial && Object.keys(parcial).length > 0 ? parcial : null;
+  const [atualizado] = await db
+    .update(linksCheckout)
+    .set({ aparencia: valor, atualizadoEm: new Date() })
+    .where(eq(linksCheckout.id, id))
+    .returning();
+  return atualizado;
+}
+
 export async function excluirLink(id: string) {
   const db = await obterDb();
   const [uso] = await db.select({ total: sql<number>`count(*)`.mapWith(Number) }).from(pedidos).where(eq(pedidos.linkId, id));
@@ -154,6 +170,7 @@ export type CheckoutPublico = {
   metodos: Metodo[];
   parcelasMax: number;
   urlSucesso: string | null;
+  aparencia: Aparencia;
   produto: { id: string; nome: string; descricao: string | null; precoCentavos: number; imagem: string | null };
   bump: {
     id: string;
@@ -179,11 +196,13 @@ export async function obterCheckoutPublico(codigo: string): Promise<CheckoutPubl
   if (!linha) return null;
   const { link, produto } = linha;
   const b = linha.bump && linha.bump.ativo ? linha.bump : null;
+  const aparenciaLoja = await obterAparenciaLoja();
   return {
     codigo: link.codigo,
     metodos: link.metodos,
     parcelasMax: link.parcelasMax,
     urlSucesso: link.urlSucesso,
+    aparencia: mesclarAparencia(aparenciaLoja, lerAparencia(link.aparencia)),
     produto: {
       id: produto.id,
       nome: produto.nome,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Checkout } from "@/components/checkout/checkout";
 import { MolduraCheckout } from "@/components/checkout/moldura";
+import { TemaCheckout } from "@/components/checkout/tema";
 import { Gtm } from "@/components/gtm/gtm";
 import { obterConfiguracoes, obterGtmId } from "@/lib/configuracoes";
 import { obterCheckoutPublico } from "@/lib/links";
@@ -29,9 +30,11 @@ export default async function PaginaCheckout({ params }: Props) {
   return (
     <>
       <Gtm id={gtmId} />
-      <MolduraCheckout nomeLoja={config.nome_loja} emailSuporte={config.email_suporte} whatsappSuporte={config.whatsapp_suporte}>
-        <Checkout checkout={checkout} />
-      </MolduraCheckout>
+      <TemaCheckout aparencia={checkout.aparencia}>
+        <MolduraCheckout nomeLoja={config.nome_loja} emailSuporte={config.email_suporte} whatsappSuporte={config.whatsapp_suporte}>
+          <Checkout checkout={checkout} />
+        </MolduraCheckout>
+      </TemaCheckout>
     </>
   );
 }

@@ -2,6 +2,19 @@
 
 Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a Changelog.
 
+## [0.4.0] — 2026-09-18
+
+### Adicionado
+
+- Editor de checkout com prévia ao vivo: cor principal, banner, título, subtítulo, texto do botão, cronômetro, selo de garantia e até seis depoimentos.
+- Duas camadas de personalização: padrão da loja em **Aparência** e ajuste por link, que guarda só o que difere e continua herdando o resto.
+- A prévia renderiza o componente real do checkout na largura de verdade, com alternância entre celular e computador.
+- Documentação em `docs/11-editor-de-checkout.md`.
+
+### Mudado
+
+- O layout do checkout e da página de pagamento passou a usar container queries em vez de quebras por janela, o que deixa a prévia fiel e não muda nada na página real.
+
 ## [0.3.0] — 2026-09-18
 
 ### Adicionado

@@ -204,6 +204,13 @@ export const IconeEngrenagem = (p: Props) => (
   </svg>
 );
 
+export const IconePincel = (p: Props) => (
+  <svg {...base(p)}>
+    <path d="M14 3l7 7-8.5 8.5a3 3 0 0 1-2 .9H7l-3 3 .6-3.5a3 3 0 0 1 .9-1.8L14 3z" />
+    <path d="M11 6l7 7" />
+  </svg>
+);
+
 export const IconeCopiar = (p: Props) => (
   <svg {...base(p)}>
     <rect x="9" y="9" width="11" height="11" rx="2" />

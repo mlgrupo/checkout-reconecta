@@ -1,0 +1,1 @@
+ALTER TABLE "links_checkout" ADD COLUMN "aparencia" jsonb;

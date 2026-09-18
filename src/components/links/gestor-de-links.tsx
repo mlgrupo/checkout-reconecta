@@ -8,7 +8,7 @@ import { CabecalhoPagina } from "@/components/shell/cabecalho-pagina";
 import { Selo } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EstadoVazio, Painel } from "@/components/ui/card";
-import { IconeCopiar, IconeExterno, IconeLink, IconeMais } from "@/components/ui/icons";
+import { IconeCopiar, IconeExterno, IconeLink, IconeMais, IconePincel } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { dinheiro } from "@/lib/formato";
@@ -101,6 +101,7 @@ export function GestorDeLinks({ podeExcluir }: { podeExcluir: boolean }) {
                     <span className="truncate">{l.nome}</span>
                     {!l.ativo && <Selo tom="neutro">Inativo</Selo>}
                     {l.bump && <Selo tom="dourado">order bump</Selo>}
+                    {l.aparencia && Object.keys(l.aparencia).length > 0 && <Selo tom="azul">aparência própria</Selo>}
                   </p>
                   <p className="mt-0.5 truncate text-[13px] text-marinho-2">
                     {l.produto.nome} · {dinheiro(l.produto.precoCentavos)}
@@ -120,6 +121,9 @@ export function GestorDeLinks({ podeExcluir }: { podeExcluir: boolean }) {
                   </Button>
                   <Button variante="fantasma" tamanho="sm" icone={<IconeExterno tamanho={15} />} href={l.url} target="_blank" rel="noreferrer">
                     Abrir
+                  </Button>
+                  <Button variante="secundario" tamanho="sm" icone={<IconePincel tamanho={15} />} href={`/links/${l.id}/aparencia`}>
+                    Aparência
                   </Button>
                   <Button variante="secundario" tamanho="sm" onClick={() => setGaveta({ modo: "editar", link: l })}>
                     Editar

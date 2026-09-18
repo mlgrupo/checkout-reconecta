@@ -11,6 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { AparenciaParcial } from "@/lib/aparencia";
 import type { Metodo, StatusPedido, TipoItem } from "@/lib/dominio";
 
 export { METODOS, STATUS_PEDIDO, TIPOS_ITEM } from "@/lib/dominio";
@@ -72,6 +73,8 @@ export const linksCheckout = pgTable(
     metodos: jsonb("metodos").$type<Metodo[]>().default(["pix", "boleto", "cartao"]).notNull(),
     parcelasMax: integer("parcelas_max").default(1).notNull(),
     urlSucesso: text("url_sucesso"),
+    /** Só os campos que diferem do padrão da loja. Ver src/lib/aparencia.ts. */
+    aparencia: jsonb("aparencia").$type<AparenciaParcial>(),
     ativo: boolean("ativo").default(true).notNull(),
     criadoEm: criadoEm(),
     atualizadoEm: atualizadoEm(),

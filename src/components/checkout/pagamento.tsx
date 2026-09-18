@@ -183,7 +183,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             ? `Válido por ${Math.floor(restante / 3_600_000)}h ${String(Math.floor((restante % 3_600_000) / 60_000)).padStart(2, "0")}min`
             : `Válido por ${String(Math.floor(restante / 60_000)).padStart(2, "0")}:${String(Math.floor((restante % 60_000) / 1000)).padStart(2, "0")}`;
     return (
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_360px] @4xl:items-start">
         <div className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2 text-[13px] font-medium text-ambar">
             <Spinner tamanho={16} />
@@ -223,7 +223,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             ))}
           </ol>
         </div>
-        <aside className="lg:sticky lg:top-6">
+        <aside className="@4xl:sticky @4xl:top-6">
           {resumo}
           <p className="mt-3 text-center text-[12px] text-marinho-3">Pedido #{pedido.numero} · {pedido.clienteEmail}</p>
         </aside>
@@ -234,7 +234,7 @@ export function Pagamento({ inicial, codigo }: Props) {
   // ── Aguardando: Boleto ──────────────────────────────────────
   if (pedido.metodo === "boleto" && pedido.boleto) {
     return (
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_360px] @4xl:items-start">
         <div className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2 text-[13px] font-medium text-ambar">
             <Spinner tamanho={16} />
@@ -259,7 +259,7 @@ export function Pagamento({ inicial, codigo }: Props) {
             )}
           </div>
         </div>
-        <aside className="lg:sticky lg:top-6">
+        <aside className="@4xl:sticky @4xl:top-6">
           {resumo}
           <p className="mt-3 text-center text-[12px] text-marinho-3">Pedido #{pedido.numero} · {pedido.clienteEmail}</p>
         </aside>

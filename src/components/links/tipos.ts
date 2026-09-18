@@ -1,3 +1,4 @@
+import type { AparenciaParcial } from "@/lib/aparencia";
 import type { Metodo } from "@/lib/dominio";
 
 export type LinkLista = {
@@ -12,6 +13,7 @@ export type LinkLista = {
   metodos: Metodo[];
   parcelasMax: number;
   urlSucesso: string | null;
+  aparencia: AparenciaParcial | null;
   ativo: boolean;
   criadoEm: string;
   produto: { id: string; nome: string; precoCentavos: number; ativo: boolean };

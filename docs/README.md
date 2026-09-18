@@ -17,6 +17,7 @@ Esta pasta é a fonte de verdade do projeto: decisões, configuração, design e
 | 08 | [Checkout e order bump](08-checkout-e-order-bump.md) | Fluxo de venda, decisão da cobrança única, status, segurança. |
 | 09 | [GTM e eventos](09-gtm-e-eventos.md) | Instalação, lista de eventos, configuração de tags, teste. |
 | 10 | [Banco de dados e deploy](10-banco-de-dados-e-deploy.md) | Drizzle, PGlite/Postgres, migrações, Railway, checklist. |
+| 11 | [Editor de checkout](11-editor-de-checkout.md) | Personalização com prévia, herança loja/link, como a cor é aplicada. |
 | — | [Decisões (ADR)](DECISOES.md) | Registro das decisões técnicas e o porquê de cada uma. |
 | — | [Changelog](../CHANGELOG.md) | O que mudou em cada etapa. |
 

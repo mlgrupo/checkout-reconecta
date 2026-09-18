@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BannerCheckout, CabecalhoOferta, Cronometro, Depoimentos, Garantia } from "@/components/checkout/blocos";
 import { Button } from "@/components/ui/button";
 import { Campo, Entrada, Selecao } from "@/components/ui/field";
 import { IconeBoleto, IconeCadeado, IconeCheck, IconeCheckout, IconePix } from "@/components/ui/icons";
@@ -25,7 +26,11 @@ import { chamarApi, ErroHttp } from "@/lib/http-cliente";
 import type { CheckoutPublico } from "@/lib/links";
 import { cn } from "@/lib/utils";
 
-type Props = { checkout: CheckoutPublico };
+type Props = {
+  checkout: CheckoutPublico;
+  /** Prévia do editor: nada é enviado ao servidor nem ao GTM. */
+  modoPrevia?: boolean;
+};
 
 type Cliente = { nome: string; email: string; cpfCnpj: string; telefone: string };
 type Cartao = { numero: string; nome: string; validade: string; cvv: string; cep: string; numeroEndereco: string; complemento: string };
@@ -38,9 +43,10 @@ const ICONES: Record<Metodo, React.ReactNode> = {
 
 const ORDEM: Metodo[] = ["pix", "cartao", "boleto"];
 
-export function Checkout({ checkout }: Props) {
+export function Checkout({ checkout, modoPrevia = false }: Props) {
   const router = useRouter();
   const metodosDisponiveis = ORDEM.filter((m) => checkout.metodos.includes(m));
+  const aparencia = checkout.aparencia;
 
   const [cliente, setCliente] = useState<Cliente>({ nome: "", email: "", cpfCnpj: "", telefone: "" });
   const [metodo, setMetodo] = useState<Metodo>(metodosDisponiveis[0] ?? "pix");
@@ -68,6 +74,7 @@ export function Checkout({ checkout }: Props) {
   const total = checkout.produto.precoCentavos + (bumpAceito && checkout.bump ? checkout.bump.precoCentavos : 0);
 
   useEffect(() => {
+    if (modoPrevia) return;
     utm.current = lerUtm();
     enviarEvento("view_item", { currency: "BRL", value: reais(checkout.produto.precoCentavos), items: itens });
     // Só no carregamento: os itens iniciais são o produto principal.
@@ -75,7 +82,7 @@ export function Checkout({ checkout }: Props) {
   }, []);
 
   function aoInteragir() {
-    if (iniciou.current) return;
+    if (iniciou.current || modoPrevia) return;
     iniciou.current = true;
     enviarEvento("begin_checkout", { currency: "BRL", value: reais(total), items: itens });
   }
@@ -90,6 +97,7 @@ export function Checkout({ checkout }: Props) {
   const clienteValido = !Object.values(errosCliente).some(Boolean);
 
   useEffect(() => {
+    if (modoPrevia) return;
     if (clienteValido && !leadEnviado.current) {
       leadEnviado.current = true;
       enviarEvento("generate_lead", { currency: "BRL", value: reais(total), items: itens }, { email_informado: true });
@@ -121,11 +129,14 @@ export function Checkout({ checkout }: Props) {
     const item: ItemGtm = { item_id: checkout.bump.id, item_name: checkout.bump.nome, price: reais(checkout.bump.precoCentavos), quantity: 1, item_category: "order_bump" };
     const novo = !bumpAceito;
     setBumpAceito(novo);
-    enviarEvento(novo ? "add_to_cart" : "remove_from_cart", { currency: "BRL", value: item.price, items: [item] });
+    if (!modoPrevia) {
+      enviarEvento(novo ? "add_to_cart" : "remove_from_cart", { currency: "BRL", value: item.price, items: [item] });
+    }
   }
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
+    if (modoPrevia) return;
     setTocados({ nome: true, email: true, cpfCnpj: true, telefone: true, numero: true, nomeCartao: true, validade: true, cvv: true, cep: true, numeroEndereco: true });
     setErrosServidor({});
     setErroGeral(null);
@@ -164,13 +175,23 @@ export function Checkout({ checkout }: Props) {
     }
   }
 
-  const rotuloBotao =
+  const rotuloPadrao =
     metodo === "pix" ? `Pagar ${dinheiro(total)} com Pix` : metodo === "cartao" ? `Pagar ${dinheiro(total)} no cartão` : `Gerar boleto de ${dinheiro(total)}`;
+  const rotuloBotao = aparencia.textoBotao?.trim() || rotuloPadrao;
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+    <>
+      {aparencia.bannerUrl && <BannerCheckout url={aparencia.bannerUrl} />}
+      <CabecalhoOferta aparencia={aparencia} />
+      {aparencia.cronometro.ativo && (
+        <div className="mb-5">
+          <Cronometro minutos={aparencia.cronometro.minutos} texto={aparencia.cronometro.texto} chave={checkout.codigo} />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-[minmax(0,1fr)_380px] @4xl:items-start">
       {/* Resumo (à direita no desktop, no topo no celular) */}
-      <aside className="lg:sticky lg:top-6 lg:order-2">
+      <aside className="@4xl:sticky @4xl:top-6 @4xl:order-2">
         <div className="colchetes rounded-card border border-gelo bg-branco p-5 shadow-card">
           <div className="flex gap-4">
             <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-panel border border-gelo bg-neve">
@@ -216,7 +237,7 @@ export function Checkout({ checkout }: Props) {
       </aside>
 
       {/* Formulário */}
-      <form onSubmit={enviar} className="flex flex-col gap-5 lg:order-1" noValidate onFocusCapture={aoInteragir}>
+      <form onSubmit={enviar} className="flex flex-col gap-5 @4xl:order-1" noValidate onFocusCapture={aoInteragir}>
         <section className="rounded-card border border-gelo bg-branco p-5 shadow-card sm:p-6">
           <h2 className="flex items-center gap-3 text-[15px] font-semibold">
             <span className="flex h-7 w-7 items-center justify-center rounded-chip bg-azul font-display text-[12px] text-branco">1</span>
@@ -356,14 +377,18 @@ export function Checkout({ checkout }: Props) {
           </div>
         )}
 
-        <Button type="submit" tamanho="lg" className="w-full text-[16px]" carregando={enviando}>
+        <Button type="submit" tamanho="lg" className="sobre-primaria w-full text-[16px]" carregando={enviando}>
           {rotuloBotao}
         </Button>
         <p className="flex items-center justify-center gap-1.5 text-[12px] text-marinho-3">
           <IconeCadeado tamanho={14} className="text-azul" />
           Ambiente seguro. Seus dados são protegidos e o pagamento é processado pelo Asaas.
         </p>
+
+        {aparencia.garantia.ativo && <Garantia dias={aparencia.garantia.dias} texto={aparencia.garantia.texto} />}
+        <Depoimentos itens={aparencia.depoimentos} />
       </form>
-    </div>
+      </div>
+    </>
   );
 }

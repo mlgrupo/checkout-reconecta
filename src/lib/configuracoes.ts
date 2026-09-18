@@ -2,6 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { obterDb } from "@/db";
 import { configuracoes } from "@/db/schema";
+import { lerAparencia, type Aparencia, type AparenciaParcial } from "@/lib/aparencia";
 import { env } from "@/lib/env";
 
 export const CHAVES = {
@@ -40,6 +41,29 @@ export async function salvarConfiguracoes(valores: Partial<Record<ChaveConfig, s
       .values({ chave, valor: valor.trim(), atualizadoEm: new Date() })
       .onConflictDoUpdate({ target: configuracoes.chave, set: { valor: valor.trim(), atualizadoEm: new Date() } });
   }
+}
+
+const CHAVE_APARENCIA = "aparencia";
+
+/** Aparência padrão da loja, usada como base por todos os checkouts. */
+export async function obterAparenciaLoja(): Promise<AparenciaParcial | null> {
+  const db = await obterDb();
+  const [linha] = await db.select().from(configuracoes).where(eq(configuracoes.chave, CHAVE_APARENCIA)).limit(1);
+  if (!linha?.valor) return null;
+  try {
+    return lerAparencia(JSON.parse(linha.valor));
+  } catch {
+    return null;
+  }
+}
+
+export async function salvarAparenciaLoja(aparencia: Aparencia) {
+  const db = await obterDb();
+  const valor = JSON.stringify(aparencia);
+  await db
+    .insert(configuracoes)
+    .values({ chave: CHAVE_APARENCIA, valor, atualizadoEm: new Date() })
+    .onConflictDoUpdate({ target: configuracoes.chave, set: { valor, atualizadoEm: new Date() } });
 }
 
 /** Id do GTM efetivo: painel tem prioridade sobre a variável de ambiente. */

@@ -25,7 +25,9 @@ export function MolduraCheckout({ nomeLoja, emailSuporte, whatsappSuporte, child
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1080px] flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      {/* @container: o layout do checkout responde à largura deste bloco, não à da janela.
+          É o que faz a prévia do editor mostrar exatamente o que o cliente vê. */}
+      <main className="@container mx-auto w-full max-w-[1080px] flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
 
       <footer className="border-t border-gelo bg-branco">
         <div className="mx-auto flex w-full max-w-[1080px] flex-col items-center gap-4 px-4 py-6 text-center text-[12px] text-marinho-3 sm:flex-row sm:justify-between sm:text-left">

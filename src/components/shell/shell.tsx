@@ -15,6 +15,7 @@ import {
   IconeLink,
   IconeMenu,
   IconePainel,
+  IconePincel,
   IconeSair,
   IconeUsuarios,
 } from "@/components/ui/icons";
@@ -35,6 +36,7 @@ const itens: Item[] = [
   { href: "/pedidos", rotulo: "Pedidos", icone: <IconeCheckout /> },
   { href: "/produtos", rotulo: "Produtos", icone: <IconeCaixa /> },
   { href: "/links", rotulo: "Links de checkout", icone: <IconeLink /> },
+  { href: "/aparencia", rotulo: "Aparência", icone: <IconePincel />, somenteAdmin: true },
   { href: "/usuarios", rotulo: "Usuários", icone: <IconeUsuarios />, somenteAdmin: true },
   { href: "/configuracoes", rotulo: "Configurações", icone: <IconeEngrenagem />, somenteAdmin: true },
   { href: "/conta", rotulo: "Minha conta", icone: <IconeConta /> },
@@ -45,6 +47,7 @@ const titulos: Record<string, string> = {
   "/pedidos": "Pedidos",
   "/produtos": "Produtos",
   "/links": "Links de checkout",
+  "/aparencia": "Aparência do checkout",
   "/usuarios": "Usuários",
   "/configuracoes": "Configurações",
   "/conta": "Minha conta",

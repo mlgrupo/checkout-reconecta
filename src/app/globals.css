@@ -168,6 +168,11 @@
     animation: var(--animate-ring-orbit);
   }
 
+  /* Texto sobre a cor principal do checkout: branco ou navy, conforme o contraste. */
+  .tema-checkout .sobre-primaria {
+    color: var(--cor-sobre-primaria, var(--color-branco));
+  }
+
   /* Barra de rolagem discreta */
   .rolagem-fina {
     scrollbar-width: thin;
