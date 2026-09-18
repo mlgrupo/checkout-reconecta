@@ -2,6 +2,7 @@
   "name": "checkout-reconecta",
   "version": "0.2.1",
   "private": true,
+  "packageManager": "pnpm@10.19.0",
   "description": "Plataforma de checkout Reconecta em parceria com o Asaas",
   "scripts": {
     "dev": "next dev",
