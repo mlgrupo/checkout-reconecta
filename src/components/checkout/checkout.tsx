@@ -608,7 +608,7 @@ export function Checkout({ checkout, modoPrevia = false }: Props) {
 
           <form
             onSubmit={enviar}
-            className="divide-y divide-gelo overflow-hidden rounded-card border border-gelo bg-branco shadow-card"
+            className="divide-y divide-gelo rounded-card border border-gelo bg-branco shadow-card"
             noValidate
             onFocusCapture={aoInteragir}
           >

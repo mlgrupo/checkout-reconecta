@@ -18,6 +18,10 @@ Todas as mudanças relevantes do Checkout Reconecta. Formato baseado em Keep a C
 - A faixa do produto mostra o preço do jeito que será cobrado: escolhendo 6x, o destaque vira "6x de R$ 100,39" e abaixo aparece "ou R$ 544,00 à vista".
 - Os três modelos anteriores continuam iguais. O novo é uma escolha no editor, por link ou como padrão da loja.
 
+### Corrigido
+
+- **Seletor de parcelas e demais dropdowns não abriam** quando havia um contêiner com rolagem em volta. Ao abrir, o menu traz a opção ativa para a vista, e essa rolagem chegava ao ancestral com `overflow`, que a regra de "fechar ao rolar" interpretava como rolagem da página e fechava o menu no mesmo instante. Agora o menu só fecha quando o gatilho sai da tela. Isso afetava o painel de edição de aparência, que rola por dentro, e o cartão único.
+
 ## [0.9.0] — 2026-09-18
 
 ### Adicionado

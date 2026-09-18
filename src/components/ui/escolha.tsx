@@ -85,7 +85,13 @@ export function Escolha<T extends string | number>({
       if (!raizRef.current?.contains(e.target as Node)) setAberta(false);
     };
     const aoRolar = (e: Event) => {
-      if (!listaRef.current?.contains(e.target as Node)) setAberta(false);
+      if (listaRef.current?.contains(e.target as Node)) return;
+      // Fecha só quando o gatilho sai da tela. A lista é posicionada junto dele e acompanha a
+      // rolagem, então rolagens pequenas não precisam fechar nada — e uma delas é provocada pelo
+      // próprio menu, que ao abrir traz a opção ativa para a vista. Qualquer ancestral com
+      // `overflow` recebe essa rolagem, e fechar nela deixava o menu impossível de abrir.
+      const caixa = raizRef.current?.getBoundingClientRect();
+      if (!caixa || caixa.bottom <= 0 || caixa.top >= window.innerHeight) setAberta(false);
     };
     document.addEventListener("mousedown", aoClicar);
     window.addEventListener("scroll", aoRolar, true);
