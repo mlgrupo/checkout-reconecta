@@ -2,7 +2,24 @@
 
 ## Reconecta
 
-A logo oficial é o emblema dourado (rosto feminino entre ramos de louro). Para entrar na plataforma:
+A marca é **dourada**: o emblema (rosto entre ramos de louro) e a palavra "Reconecta" em `#C99B26`, o mesmo
+dourado dos destaques do design system.
+
+Os arquivos oficiais vieram em vermelho `#D3111A`, que era a versão anterior da marca. Foram recoloridos para
+dourado preservando a diferença de claro e escuro entre os tons do emblema, para ele não virar uma mancha chapada.
+O script usado está em `docs/marca/` como referência: converte cada vermelho para HSL, troca o matiz pelo dourado
+e remapeia a luminosidade.
+
+| Arquivo | Uso |
+|---------|-----|
+| `public/brand/reconecta.svg` | Marca horizontal (emblema + palavra). Cabeçalho do checkout e do painel. |
+| `public/brand/reconecta-simbolo.svg` | Só o emblema. Favicon e espaços estreitos. |
+| `src/app/icon.svg` | Favicon, cópia do emblema. |
+
+Se a marca mudar de cor de novo, troque os arquivos e confira o contraste sobre branco: dourado sobre branco tem
+contraste baixo, aceitável para logo mas não para texto.
+
+### Instruções originais de instalação
 
 1. Salve o arquivo como `public/brand/reconecta.svg` (SVG é o ideal; se só houver PNG, salve como
    `public/brand/reconecta.png` e troque a extensão em `src/components/brand/lockup.tsx` e
@@ -30,7 +47,8 @@ https://baas.asaas.com/selos/Servicos_financeiros_Asaas-Reduzida-Negativo-Branco
 
 Onde aparece:
 
-- **Rodapé do checkout**: "Pagamento processado por" + selo.
+- **Topo do checkout**: ao lado de "Pagamento seguro", com um divisor entre os dois. No celular o texto sai e ficam o cadeado e o selo.
+- **Rodapé do checkout**: "Pagamento processado por" + selo + "Ambiente PCI DSS".
 - **Tela de entrada e barra lateral**: lockup Reconecta | selo.
 - Nunca recolorimos, esticamos ou recortamos o selo.
 
